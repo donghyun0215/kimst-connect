@@ -1,5 +1,6 @@
 -- KIMST Singapore Connect — 1:1 Meeting Booking Schema
 -- Run this once in Supabase Dashboard → SQL Editor → New query → Run.
+-- Safe to re-run: every statement is idempotent (if not exists / or replace).
 
 -- ── bookings table ──────────────────────────────────────────────
 create table if not exists public.bookings (
@@ -24,18 +25,38 @@ create table if not exists public.bookings (
 
 alter table public.bookings enable row level security;
 
+-- No public policies are created on `bookings` on purpose — the table
+-- contains applicant PII (name, email, phone) and all writes/reads happen
+-- server-side via the service role key in the TanStack Start server
+-- functions (src/lib/booking.server.ts), which bypasses RLS.
+
+-- ── audit log ────────────────────────────────────────────────────
+-- Records every booking creation/cancellation as an immutable event, with a
+-- snapshot of the booking details, so the trail survives the row being
+-- deleted from `bookings`. Answers "who booked what, when, and who
+-- cancelled it" in the admin dashboard.
+create table if not exists public.booking_events (
+  id uuid primary key default gen_random_uuid(),
+  event_type text not null check (event_type in ('booked', 'cancelled_by_user', 'cancelled_by_admin')),
+  booking_id uuid not null,
+  company_id text not null,
+  timeslot_id text not null,
+  full_name text not null,
+  organisation text,
+  email text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.booking_events enable row level security;
+
 -- ── service_role grants ─────────────────────────────────────────
 -- With "Automatically expose new tables" disabled on the project, even
 -- service_role needs explicit table privileges. All reads/writes go through
 -- the server functions using this role.
 grant usage on schema public to service_role;
 grant select, insert, update, delete on public.bookings to service_role;
+grant select, insert on public.booking_events to service_role;
 alter default privileges in schema public grant all on tables to service_role;
-
--- No public policies are created on `bookings` on purpose — the table
--- contains applicant PII (name, email, phone) and all writes/reads happen
--- server-side via the service role key in the TanStack Start server
--- functions (src/lib/booking.server.ts), which bypasses RLS.
 
 -- ── public availability view ────────────────────────────────────
 -- Exposes only which (company, timeslot) pairs are taken — no PII — so the
@@ -46,10 +67,21 @@ create or replace view public.booked_slots as
 grant select on public.booked_slots to anon, authenticated;
 
 -- ── realtime ────────────────────────────────────────────────────
--- Broadcast INSERT/DELETE on bookings so the admin dashboard live-updates.
--- (The admin page also polls every 20s as a fallback, so this is optional
--- but recommended.)
-alter publication supabase_realtime add table public.bookings;
+-- Broadcast INSERT/DELETE so the booking page and admin dashboard live-update.
+-- (Both pages also poll on an interval as a fallback, so this is optional
+-- but recommended.) Safe to re-run — errors harmlessly if already added.
+do $$
+begin
+  alter publication supabase_realtime add table public.bookings;
+exception when duplicate_object then null;
+end $$;
 
--- ── verification query (optional) ───────────────────────────────
+do $$
+begin
+  alter publication supabase_realtime add table public.booking_events;
+exception when duplicate_object then null;
+end $$;
+
+-- ── verification queries (optional) ─────────────────────────────
 -- select * from public.bookings order by created_at desc;
+-- select * from public.booking_events order by created_at desc;

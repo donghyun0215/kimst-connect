@@ -17,6 +17,35 @@ export type BookingResult =
   | { ok: true }
   | { ok: false; error: "slot_taken" | "already_booked_this_session" | "unknown"; message: string };
 
+type EventType = "booked" | "cancelled_by_user" | "cancelled_by_admin";
+
+interface EventSnapshot {
+  booking_id: string;
+  company_id: string;
+  timeslot_id: string;
+  full_name: string;
+  organisation: string | null;
+  email: string;
+}
+
+// Best-effort audit log write — never blocks or fails the booking/cancel
+// operation itself. The `bookings` row (or DB unique constraints) is always
+// the source of truth for availability; this table is a read-only trail.
+async function logEvent(eventType: EventType, snapshot: EventSnapshot) {
+  const { error } = await supabaseAdmin.from("booking_events").insert({
+    event_type: eventType,
+    booking_id: snapshot.booking_id,
+    company_id: snapshot.company_id,
+    timeslot_id: snapshot.timeslot_id,
+    full_name: snapshot.full_name,
+    organisation: snapshot.organisation,
+    email: snapshot.email,
+  });
+  if (error) {
+    console.error(`logEvent(${eventType}) error:`, error);
+  }
+}
+
 export const createBooking = createServerFn({ method: "POST" })
   .validator((data: BookingInput) => data)
   .handler(async ({ data }): Promise<BookingResult> => {
@@ -36,17 +65,23 @@ export const createBooking = createServerFn({ method: "POST" })
       return { ok: false, error: "unknown", message: "Missing required fields." };
     }
 
-    const { error } = await supabaseAdmin.from("bookings").insert({
-      company_id: companySlug,
-      timeslot_id: timeslotId,
-      full_name: fullName,
-      organisation,
-      job_title: jobTitle,
-      email: email.toLowerCase().trim(),
-      phone,
-      primary_interest: primaryInterest,
-      notes: notes ?? null,
-    });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const { data: inserted, error } = await supabaseAdmin
+      .from("bookings")
+      .insert({
+        company_id: companySlug,
+        timeslot_id: timeslotId,
+        full_name: fullName,
+        organisation,
+        job_title: jobTitle,
+        email: normalizedEmail,
+        phone,
+        primary_interest: primaryInterest,
+        notes: notes ?? null,
+      })
+      .select("id")
+      .single();
 
     if (error) {
       // Postgres unique_violation
@@ -70,6 +105,15 @@ export const createBooking = createServerFn({ method: "POST" })
       console.error("createBooking error:", error);
       return { ok: false, error: "unknown", message: "Something went wrong. Please try again." };
     }
+
+    await logEvent("booked", {
+      booking_id: inserted.id,
+      company_id: companySlug,
+      timeslot_id: timeslotId,
+      full_name: fullName,
+      organisation,
+      email: normalizedEmail,
+    });
 
     return { ok: true };
   });
@@ -122,12 +166,24 @@ export const selfCancelBooking = createServerFn({ method: "POST" })
       .delete()
       .eq("id", data.id)
       .eq("email", email)
-      .select("id");
+      .select("id, company_id, timeslot_id, full_name, organisation, email");
     if (error) {
       console.error("selfCancelBooking error:", error);
       return { ok: false };
     }
-    return { ok: (deleted?.length ?? 0) > 0 };
+    const row = deleted?.[0];
+    if (!row) return { ok: false };
+
+    await logEvent("cancelled_by_user", {
+      booking_id: row.id,
+      company_id: row.company_id,
+      timeslot_id: row.timeslot_id,
+      full_name: row.full_name,
+      organisation: row.organisation,
+      email: row.email,
+    });
+
+    return { ok: true };
   });
 
 export interface AdminBooking {
@@ -167,10 +223,56 @@ export const adminCancelBooking = createServerFn({ method: "POST" })
     if (data.password !== ADMIN_PASSWORD) {
       return { ok: false };
     }
-    const { error } = await supabaseAdmin.from("bookings").delete().eq("id", data.id);
+    const { data: deleted, error } = await supabaseAdmin
+      .from("bookings")
+      .delete()
+      .eq("id", data.id)
+      .select("id, company_id, timeslot_id, full_name, organisation, email");
     if (error) {
       console.error("adminCancelBooking error:", error);
       return { ok: false };
     }
+    const row = deleted?.[0];
+    if (!row) return { ok: false };
+
+    await logEvent("cancelled_by_admin", {
+      booking_id: row.id,
+      company_id: row.company_id,
+      timeslot_id: row.timeslot_id,
+      full_name: row.full_name,
+      organisation: row.organisation,
+      email: row.email,
+    });
+
     return { ok: true };
+  });
+
+export interface BookingEvent {
+  id: string;
+  event_type: EventType;
+  booking_id: string;
+  company_id: string;
+  timeslot_id: string;
+  full_name: string;
+  organisation: string | null;
+  email: string;
+  created_at: string;
+}
+
+export const adminListEvents = createServerFn({ method: "POST" })
+  .validator((data: { password: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: true; events: BookingEvent[] } | { ok: false }> => {
+    if (data.password !== ADMIN_PASSWORD) {
+      return { ok: false };
+    }
+    const { data: rows, error } = await supabaseAdmin
+      .from("booking_events")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) {
+      console.error("adminListEvents error:", error);
+      return { ok: true, events: [] };
+    }
+    return { ok: true, events: rows as BookingEvent[] };
   });

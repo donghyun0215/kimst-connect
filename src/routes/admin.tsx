@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { companies } from "@/data/companies";
 import { EVENT_DATE, TIMESLOTS } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
-import { adminListBookings, adminCancelBooking, type AdminBooking } from "@/lib/booking.server";
+import { adminListBookings, adminCancelBooking, adminListEvents, type AdminBooking, type BookingEvent } from "@/lib/booking.server";
 import kimstLogo from "@/assets/kimst-logo.png";
 
 export const Route = createFileRoute("/admin")({
@@ -23,6 +23,7 @@ function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
+  const [events, setEvents] = useState<BookingEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
@@ -30,7 +31,10 @@ function AdminPage() {
 
   const load = useCallback(async (pw: string) => {
     setLoading(true);
-    const res = await adminListBookings({ data: { password: pw } });
+    const [res, evRes] = await Promise.all([
+      adminListBookings({ data: { password: pw } }),
+      adminListEvents({ data: { password: pw } }),
+    ]);
     setLoading(false);
     if (!res.ok) {
       setAuthError("Incorrect password.");
@@ -38,6 +42,7 @@ function AdminPage() {
       return false;
     }
     setBookings(res.bookings);
+    if (evRes.ok) setEvents(evRes.events);
     setLastSync(new Date());
     return true;
   }, []);
@@ -60,6 +65,9 @@ function AdminPage() {
     const channel = supabase
       .channel("admin-bookings")
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => {
+        load(pwRef.current);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "booking_events" }, () => {
         load(pwRef.current);
       })
       .subscribe();
@@ -325,9 +333,70 @@ function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* ACTIVITY LOG */}
+        <h2 className="mt-12 text-lg font-bold text-navy">Activity Log</h2>
+        <p className="text-sm text-muted-foreground">
+          Every booking and cancellation, in order — including who cancelled it.
+        </p>
+        {events.length === 0 ? (
+          <div className="mt-4 rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
+            No activity yet.
+          </div>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {events.map((ev) => {
+              const c = companies.find((x) => x.slug === ev.company_id);
+              const t = TIMESLOTS.find((x) => x.id === ev.timeslot_id);
+              const style = eventStyle(ev.event_type);
+              return (
+                <div
+                  key={ev.id}
+                  className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border px-4 py-3 text-sm ${style.wrap}`}
+                >
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${style.badge}`}>
+                    {style.label}
+                  </span>
+                  <span className="font-semibold text-navy">{ev.full_name}</span>
+                  {ev.organisation && <span className="text-muted-foreground">({ev.organisation})</span>}
+                  <span className="text-muted-foreground">·</span>
+                  <span>{c?.name ?? ev.company_id}</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span>{t?.label ?? ev.timeslot_id}</span>
+                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                    {new Date(ev.created_at).toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );
+}
+
+function eventStyle(type: BookingEvent["event_type"]) {
+  switch (type) {
+    case "booked":
+      return {
+        label: "Booked",
+        wrap: "border-green-200 bg-green-50",
+        badge: "bg-green-600 text-white",
+      };
+    case "cancelled_by_user":
+      return {
+        label: "Cancelled (self)",
+        wrap: "border-amber-200 bg-amber-50",
+        badge: "bg-amber-600 text-white",
+      };
+    case "cancelled_by_admin":
+      return {
+        label: "Cancelled (admin)",
+        wrap: "border-red-200 bg-red-50",
+        badge: "bg-red-600 text-white",
+      };
+  }
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
