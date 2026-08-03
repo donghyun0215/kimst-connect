@@ -24,6 +24,14 @@ create table if not exists public.bookings (
 
 alter table public.bookings enable row level security;
 
+-- ── service_role grants ─────────────────────────────────────────
+-- With "Automatically expose new tables" disabled on the project, even
+-- service_role needs explicit table privileges. All reads/writes go through
+-- the server functions using this role.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.bookings to service_role;
+alter default privileges in schema public grant all on tables to service_role;
+
 -- No public policies are created on `bookings` on purpose — the table
 -- contains applicant PII (name, email, phone) and all writes/reads happen
 -- server-side via the service role key in the TanStack Start server

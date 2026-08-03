@@ -34,7 +34,7 @@ function Landing() {
             <img
               src={kimstLogo}
               alt="KIMST Korea Institute of Marine Science & Technology Promotion"
-              className="h-10 w-auto shrink-0 object-contain sm:h-12 md:h-14"
+              className="h-14 w-auto shrink-0 object-contain sm:h-16 md:h-20"
             />
           </a>
 
@@ -67,13 +67,13 @@ function Landing() {
 
         <div className="mx-auto max-w-7xl px-5 pb-24 pt-28 sm:px-6 sm:pt-36 md:pb-40 md:pt-48">
           <div className="max-w-3xl">
-            <div className="flex w-full flex-col gap-1.5 rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 px-4 py-3 text-[11px] font-medium backdrop-blur-sm sm:inline-flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:rounded-full sm:py-2 sm:text-xs">
-              <span className="flex min-w-0 items-center gap-2">
+            <div className="flex w-full flex-col gap-1.5 rounded-2xl border border-primary-foreground/25 bg-primary-foreground/10 px-4 py-3 text-[11px] font-medium backdrop-blur-sm sm:inline-flex sm:w-auto sm:flex-row sm:flex-nowrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:rounded-full sm:py-2 sm:text-xs">
+              <span className="flex min-w-0 items-center gap-2 sm:whitespace-nowrap">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-foreground animate-pulse" />
                 <span>{TRACKS.track1.title} ({TRACKS.track1.dates})</span>
               </span>
-              <span className="hidden h-4 w-px bg-primary-foreground/50 sm:mx-2 sm:block" />
-              <span className="pl-3.5 sm:pl-0">{TRACKS.track2.title} ({TRACKS.track2.dates})</span>
+              <span className="hidden h-4 w-px shrink-0 bg-primary-foreground/50 sm:mx-2 sm:block" />
+              <span className="pl-3.5 sm:whitespace-nowrap sm:pl-0">{TRACKS.track2.title} ({TRACKS.track2.dates})</span>
             </div>
             <h1 className="mt-6 bg-gradient-to-r from-white to-light-blue bg-clip-text text-4xl font-bold leading-[1.05] text-transparent sm:text-5xl md:text-6xl lg:text-7xl">
               K-Marine Tech Open Innovation Week
@@ -131,10 +131,10 @@ function Landing() {
           </div>
 
           <div className="mt-14 grid gap-6 md:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+            <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Corporates</div>
               <h3 className="mt-2 text-2xl font-bold text-navy">Tailored Pilot Testing & Free Trials</h3>
-              <p className="mt-3 text-muted-foreground">
+              <p className="mt-3 flex-1 text-muted-foreground">
                 Explore free trials and pilot opportunities with leading Korean marine tech startups.
                 Validate cutting-edge technology, test real-world use cases, and build scalable partnerships.
               </p>
@@ -149,10 +149,10 @@ function Landing() {
               </a>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+            <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Investors</div>
               <h3 className="mt-2 text-2xl font-bold text-navy">High-Growth Maritime Tech Investments</h3>
-              <p className="mt-3 text-muted-foreground">
+              <p className="mt-3 flex-1 text-muted-foreground">
                 Discover promising investment opportunities in cutting-edge maritime technology. Reserve a 30-minute
                 private 1:1 session with startups matched to your sector preferences, investment stage, and expansion goals.
               </p>
@@ -167,10 +167,10 @@ function Landing() {
               </a>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+            <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">Open to all</div>
               <h3 className="mt-2 text-2xl font-bold text-navy">EMA-Marine Day</h3>
-              <p className="mt-3 text-muted-foreground">
+              <p className="mt-3 flex-1 text-muted-foreground">
                 Learn, Connect, and Scale: Discover how pioneering entrepreneurs partner with
                 industry leaders to achieve mutual growth. Join our 1:1 Round Table Meetings and
                 connect with key industry stakeholders during the networking session.
@@ -319,7 +319,7 @@ function Landing() {
               <img
                 src={kimstLogo}
                 alt="KIMST"
-                className="h-16 w-auto object-contain"
+                className="h-20 w-auto object-contain"
               />
 
 

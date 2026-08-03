@@ -4,7 +4,7 @@ import { z } from "zod";
 import { companies } from "@/data/companies";
 import { EVENT_DATE, TIMESLOTS } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
-import { createBooking, type BookingInput } from "@/lib/booking.server";
+import { createBooking, lookupBookingsByEmail, selfCancelBooking, type BookingInput, type MyBooking } from "@/lib/booking.server";
 import kimstLogo from "@/assets/kimst-logo.png";
 
 const searchSchema = z.object({
@@ -62,6 +62,12 @@ function BookPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [successFor, setSuccessFor] = useState<{ companySlug: string; timeslotId: string } | null>(null);
 
+  // "Check your booking" panel
+  const [lookupEmail, setLookupEmail] = useState("");
+  const [lookupResults, setLookupResults] = useState<MyBooking[] | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [selfCancelling, setSelfCancelling] = useState<string | null>(null);
+
   const refreshAvailability = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("booked_slots").select("company_id, timeslot_id");
@@ -102,6 +108,47 @@ function BookPage() {
     setSelected({ companySlug, timeslotId });
   }
 
+  async function handleLookup(e: React.FormEvent) {
+    e.preventDefault();
+    const email = lookupEmail.trim();
+    if (!email) return;
+    setLookupLoading(true);
+    const rows = await lookupBookingsByEmail({ data: { email } });
+    setLookupLoading(false);
+    setLookupResults(rows);
+  }
+
+  async function handleSelfCancel(b: MyBooking) {
+    const c = companies.find((x) => x.slug === b.company_id);
+    const t = TIMESLOTS.find((x) => x.id === b.timeslot_id);
+    if (
+      !confirm(
+        `Cancel your ${t?.label ?? ""} meeting with ${c?.name ?? b.company_id}?\n\nThis frees the slot for someone else and cannot be undone.`,
+      )
+    )
+      return;
+    setSelfCancelling(b.id);
+    const res = await selfCancelBooking({ data: { email: lookupEmail, id: b.id } });
+    setSelfCancelling(null);
+    if (res.ok) {
+      setLookupResults((prev) => (prev ? prev.filter((x) => x.id !== b.id) : prev));
+      // Clear the localStorage badge for this slot if it matches
+      const updated = { ...myBookings };
+      if (updated[b.timeslot_id] === b.company_id) {
+        delete updated[b.timeslot_id];
+        setMyBookings(updated);
+        try {
+          localStorage.setItem("kimst-my-bookings", JSON.stringify(updated));
+        } catch {
+          // ignore
+        }
+      }
+      await refreshAvailability();
+    } else {
+      alert("Could not cancel this booking. Please refresh and try again.");
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return;
@@ -138,6 +185,8 @@ function BookPage() {
     }
     setSuccessFor(selected);
     setSelected(null);
+    setLookupEmail(payload.email);
+    setLookupResults(null);
     await refreshAvailability();
   }
 
@@ -148,7 +197,7 @@ function BookPage() {
       <header className="border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link to="/" className="flex items-center gap-3 min-w-0">
-            <img src={kimstLogo} alt="KIMST" className="h-9 w-auto shrink-0 object-contain" />
+            <img src={kimstLogo} alt="KIMST" className="h-14 w-auto shrink-0 object-contain sm:h-16" />
           </Link>
           <Link
             to="/"
@@ -253,6 +302,84 @@ function BookPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* CHECK / MANAGE YOUR BOOKING */}
+        <div className="mt-12 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            Already booked?
+          </div>
+          <h2 className="mt-2 text-xl font-bold text-navy">Check or cancel your booking</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Enter the email you used when booking to see your confirmed meetings on any device.
+          </p>
+          <form onSubmit={handleLookup} className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <input
+              type="email"
+              required
+              value={lookupEmail}
+              onChange={(e) => {
+                setLookupEmail(e.target.value);
+                setLookupResults(null);
+              }}
+              placeholder="your@email.com"
+              className="w-full rounded-lg border border-input px-3 py-2.5 text-sm sm:max-w-sm"
+            />
+            <button
+              type="submit"
+              disabled={lookupLoading}
+              className="shrink-0 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+            >
+              {lookupLoading ? "Checking…" : "Find my bookings"}
+            </button>
+          </form>
+
+          {lookupResults !== null && (
+            <div className="mt-6">
+              {lookupResults.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                  No bookings found for this email. If you just booked, double-check the spelling —
+                  the lookup matches the exact email used on the form.
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {lookupResults.map((b) => {
+                    const c = companies.find((x) => x.slug === b.company_id);
+                    const t = TIMESLOTS.find((x) => x.id === b.timeslot_id);
+                    return (
+                      <div key={b.id} className="rounded-xl border border-border bg-background p-5">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-primary">
+                          {t?.label} · {t?.time}
+                        </div>
+                        <div className="mt-1.5 text-lg font-bold text-navy">{c?.name ?? b.company_id}</div>
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          {EVENT_DATE} · IMDA Office, Level 5
+                        </div>
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          {c && (
+                            <Link
+                              to="/companies/$slug"
+                              params={{ slug: c.slug }}
+                              className="text-xs font-semibold text-primary hover:underline"
+                            >
+                              View one-pager →
+                            </Link>
+                          )}
+                          <button
+                            onClick={() => handleSelfCancel(b)}
+                            disabled={selfCancelling === b.id}
+                            className="rounded-full border border-red-200 bg-red-50 px-4 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                          >
+                            {selfCancelling === b.id ? "Cancelling…" : "Cancel booking"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {selected && selectedCompany && (

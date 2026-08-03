@@ -85,6 +85,51 @@ export const fetchBookedSlots = createServerFn({ method: "GET" }).handler(async 
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "lodestart.ai";
 
+export interface MyBooking {
+  id: string;
+  company_id: string;
+  timeslot_id: string;
+  full_name: string;
+  created_at: string;
+}
+
+export const lookupBookingsByEmail = createServerFn({ method: "POST" })
+  .validator((data: { email: string }) => data)
+  .handler(async ({ data }): Promise<MyBooking[]> => {
+    const email = data.email?.toLowerCase().trim();
+    if (!email || !email.includes("@")) return [];
+    const { data: rows, error } = await supabaseAdmin
+      .from("bookings")
+      .select("id, company_id, timeslot_id, full_name, created_at")
+      .eq("email", email)
+      .order("timeslot_id", { ascending: true });
+    if (error) {
+      console.error("lookupBookingsByEmail error:", error);
+      return [];
+    }
+    return rows as MyBooking[];
+  });
+
+export const selfCancelBooking = createServerFn({ method: "POST" })
+  .validator((data: { email: string; id: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const email = data.email?.toLowerCase().trim();
+    if (!email || !data.id) return { ok: false };
+    // Delete only if the booking id belongs to this email — the email acts
+    // as the owner check, so nobody can cancel someone else's booking by id.
+    const { data: deleted, error } = await supabaseAdmin
+      .from("bookings")
+      .delete()
+      .eq("id", data.id)
+      .eq("email", email)
+      .select("id");
+    if (error) {
+      console.error("selfCancelBooking error:", error);
+      return { ok: false };
+    }
+    return { ok: (deleted?.length ?? 0) > 0 };
+  });
+
 export interface AdminBooking {
   id: string;
   company_id: string;
