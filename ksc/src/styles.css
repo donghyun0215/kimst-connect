@@ -1,0 +1,131 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-navy: var(--navy);
+  --color-light-blue: var(--light-blue);
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  /* KIMST blue palette */
+  --background: oklch(0.995 0.005 240);
+  --foreground: oklch(0.18 0.05 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.05 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.05 260);
+  --primary: oklch(0.55 0.22 260);            /* KIMST blue #1E6BFF-ish */
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-glow: oklch(0.68 0.18 245);
+  --navy: oklch(0.28 0.12 265);
+  --light-blue: oklch(0.82 0.12 240);
+  --secondary: oklch(0.96 0.02 250);
+  --secondary-foreground: oklch(0.28 0.12 265);
+  --muted: oklch(0.965 0.012 245);
+  --muted-foreground: oklch(0.5 0.04 255);
+  --accent: oklch(0.93 0.05 240);
+  --accent-foreground: oklch(0.28 0.12 265);
+  --destructive: oklch(0.6 0.24 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.92 0.02 245);
+  --input: oklch(0.92 0.02 245);
+  --ring: oklch(0.55 0.22 260);
+
+  --gradient-hero: linear-gradient(135deg, oklch(0.35 0.18 265) 0%, oklch(0.55 0.22 260) 50%, oklch(0.68 0.18 245) 100%);
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
+  --gradient-wave: linear-gradient(180deg, transparent 0%, oklch(0.97 0.02 245) 100%);
+  --shadow-elegant: 0 20px 50px -20px color-mix(in oklab, var(--primary) 35%, transparent);
+  --shadow-card: 0 4px 20px -4px color-mix(in oklab, var(--navy) 15%, transparent);
+  --shadow-glow: 0 0 60px color-mix(in oklab, var(--primary-glow) 40%, transparent);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility btn-hero {
+  background: var(--gradient-primary);
+  color: var(--primary-foreground);
+  box-shadow: var(--shadow-elegant);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow), var(--shadow-elegant);
+  }
+}
+
+@utility btn-outline-hero {
+  background: transparent;
+  color: var(--primary-foreground);
+  border: 1.5px solid color-mix(in oklab, var(--primary-foreground) 60%, transparent);
+  transition: all 0.2s ease;
+  &:hover {
+    background: color-mix(in oklab, var(--primary-foreground) 15%, transparent);
+    border-color: var(--primary-foreground);
+  }
+}
+
+@utility card-startup {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-elegant);
+    border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+  }
+}
+
+@utility bg-hero-gradient {
+  background: var(--gradient-hero);
+}
+
+@utility bg-wave-fade {
+  background: var(--gradient-wave);
+}
