@@ -72,19 +72,81 @@ function BookPage() {
     setLoading(true);
     const { data, error } = await supabase.from("booked_slots").select("company_id, timeslot_id");
     if (!error && data) {
-      setBooked(new Set(data.map((row) => key(row.company_id, row.timeslot_id))));
+      const serverBooked = new Set(data.map((row) => key(row.company_id, row.timeslot_id)));
+      setBooked(serverBooked);
+      // Reconcile: if a slot we claim as "mine" is no longer booked on the
+      // server (e.g. an admin cancelled it), drop the stale local claim so
+      // the UI unlocks immediately.
+      setMyBookings((prev) => {
+        const next: Record<string, string> = {};
+        let changed = false;
+        for (const [timeslotId, companySlug] of Object.entries(prev)) {
+          if (serverBooked.has(key(companySlug, timeslotId))) {
+            next[timeslotId] = companySlug;
+          } else {
+            changed = true;
+          }
+        }
+        if (changed) {
+          try {
+            localStorage.setItem("kimst-my-bookings", JSON.stringify(next));
+          } catch {
+            // ignore
+          }
+        }
+        return changed ? next : prev;
+      });
     }
     setLoading(false);
+  };
+
+  // Rebuild "my bookings" from the DB using the email we booked with — the
+  // server is the source of truth; localStorage is just a hint for this device.
+  const syncMyBookingsFromServer = async (email: string) => {
+    const rows = await lookupBookingsByEmail({ data: { email } });
+    const next: Record<string, string> = {};
+    for (const b of rows) next[b.timeslot_id] = b.company_id;
+    setMyBookings(next);
+    try {
+      localStorage.setItem("kimst-my-bookings", JSON.stringify(next));
+    } catch {
+      // ignore
+    }
   };
 
   useEffect(() => {
     refreshAvailability();
     try {
-      const stored = localStorage.getItem("kimst-my-bookings");
-      if (stored) setMyBookings(JSON.parse(stored));
+      const storedEmail = localStorage.getItem("kimst-my-email");
+      if (storedEmail) {
+        setLookupEmail(storedEmail);
+        // Exact per-user truth from the DB (catches admin cancellations even
+        // if the same slot was re-booked by someone else).
+        syncMyBookingsFromServer(storedEmail);
+      } else {
+        const stored = localStorage.getItem("kimst-my-bookings");
+        if (stored) setMyBookings(JSON.parse(stored));
+      }
     } catch {
       // ignore
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Live availability: refresh when any booking is created or cancelled.
+  useEffect(() => {
+    const channel = supabase
+      .channel("book-availability")
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => {
+        refreshAvailability();
+      })
+      .subscribe();
+    const poll = setInterval(refreshAvailability, 30000);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(poll);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -180,6 +242,7 @@ function BookPage() {
     setMyBookings(updated);
     try {
       localStorage.setItem("kimst-my-bookings", JSON.stringify(updated));
+      localStorage.setItem("kimst-my-email", payload.email.toLowerCase());
     } catch {
       // ignore
     }
