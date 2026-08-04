@@ -168,7 +168,7 @@ function MeetPage() {
       <header className="border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <Link to="/" className="flex items-center gap-3 min-w-0">
-            <img src={kimstLogo} alt="KIMST" className="h-20 w-auto shrink-0 object-contain sm:h-24 md:h-28" />
+            <img src={kimstLogo} alt="KIMST" className="h-16 w-auto shrink-0 object-contain sm:h-24 md:h-28" />
           </Link>
           <nav className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <Link
@@ -279,7 +279,7 @@ function MeetPage() {
                 </p>
               )}
               <div className="mt-4 overflow-x-auto rounded-2xl border border-border shadow-sm">
-                <table className="w-full min-w-[640px] border-collapse text-sm">
+                <table className="w-full min-w-[640px] table-fixed border-collapse text-sm">
                   <thead>
                     <tr className="bg-secondary text-left text-navy">
                       <th className="w-28 p-3 font-semibold">Time</th>

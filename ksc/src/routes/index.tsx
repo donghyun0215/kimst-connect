@@ -37,6 +37,12 @@ function NuldamInfo() {
             Track 2 Startups <span className="font-medium text-muted-foreground">· {NULDAM_TRACKS[1].timeRange}</span>
           </span>
         </div>
+        <div className="flex items-baseline gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+          <span className="w-24 shrink-0 text-xs font-bold text-primary">Wed, 2 Sep</span>
+          <span className="text-sm font-semibold text-navy">
+            Open Innovation Day <span className="font-medium text-muted-foreground">· {EVENT_TIME}</span>
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -116,7 +122,7 @@ function Landing() {
             <img
               src={kimstLogo}
               alt="KIMST Korea Institute of Marine Science & Technology Promotion"
-              className="h-20 w-auto shrink-0 object-contain sm:h-24 md:h-32"
+              className="h-16 w-auto shrink-0 object-contain sm:h-24 md:h-32"
             />
           </a>
 
@@ -211,6 +217,9 @@ function Landing() {
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Corporates</div>
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Let's discuss collaborative opportunities</h3>
+              <div className="mt-1 text-sm font-semibold text-primary">
+                Private 1:1 Meetings with Korea's Marine-Tech Startups
+              </div>
               <NuldamInfo />
               <Link
                 to="/meet"
@@ -226,6 +235,9 @@ function Landing() {
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Investors</div>
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Discover investment opportunities</h3>
+              <div className="mt-1 text-sm font-semibold text-primary">
+                Reserve a Private 1:1 Session with the Founders
+              </div>
               <NuldamInfo />
               <Link
                 to="/meet"

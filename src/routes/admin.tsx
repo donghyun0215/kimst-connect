@@ -341,7 +341,7 @@ function AdminPage() {
                 {track.id === "track1" ? "Track 1" : "Track 2"} · {track.dateLabel} · {track.timeRange}
               </div>
               <div className="mt-2 overflow-x-auto rounded-2xl border border-border shadow-sm">
-                <table className="w-full min-w-[620px] border-collapse text-sm">
+                <table className="w-full min-w-[620px] table-fixed border-collapse text-sm">
                   <thead>
                     <tr className="bg-secondary text-left text-navy">
                       <th className="w-28 p-3 font-semibold">Time</th>
