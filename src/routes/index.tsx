@@ -28,8 +28,13 @@ function NuldamInfo() {
         <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
           <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 31 Aug</span>
           <span className="min-w-0 text-sm font-semibold text-navy">
-            Track 1
-            <span className="ml-2 text-xs font-normal text-muted-foreground">{NULDAM_TRACKS[0].timeRange}</span>
+            Track 1<span className="ml-2 text-xs font-normal text-muted-foreground">10:30 – 12:10</span>
+          </span>
+        </div>
+        <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
+          <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 31 Aug</span>
+          <span className="min-w-0 text-sm font-semibold text-navy">
+            Track 1<span className="ml-2 text-xs font-normal text-muted-foreground">14:00 – 15:40</span>
           </span>
         </div>
         <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
@@ -212,7 +217,7 @@ function Landing() {
           <div className="mt-14 grid gap-6 md:grid-cols-3">
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Corporates</div>
-              <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Let's discuss collaborative opportunities</h3>
+              <h3 className="mt-2 min-h-[4.5rem] text-2xl font-bold leading-snug text-navy">Let's discuss collaborative opportunities</h3>
               <Link
                 to="/meet"
                 className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
@@ -227,7 +232,7 @@ function Landing() {
 
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Investors</div>
-              <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Discover investment opportunities</h3>
+              <h3 className="mt-2 min-h-[4.5rem] text-2xl font-bold leading-snug text-navy">Discover investment opportunities</h3>
               <Link
                 to="/meet"
                 className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
@@ -242,12 +247,9 @@ function Landing() {
 
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Potential Partners</div>
-              <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">
+              <h3 className="mt-2 min-h-[4.5rem] text-2xl font-bold leading-snug text-navy">
                 K-Marine Tech Open Innovation Day
               </h3>
-              <div className="mt-1 text-sm font-semibold text-primary">
-                Bridging &amp; Scaling Proven Success to Singapore
-              </div>
               <Link
                 to="/book"
                 className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
