@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
 function NuldamInfo() {
   return (
     <div className="mt-4 flex-1">
-      <div className="space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3 text-sm text-navy">
+      <div className="min-h-24 space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3 text-sm text-navy">
         <div className="flex items-start gap-2">
           <svg className="mt-0.5 h-4 w-4 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="3" />
@@ -25,19 +25,19 @@ function NuldamInfo() {
         </div>
       </div>
       <div className="mt-2 space-y-2">
-        <div className="flex items-baseline gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+        <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
           <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 31 Aug</span>
           <span className="text-sm font-semibold text-navy">
             Track 1 Startups <span className="font-medium text-muted-foreground">· {NULDAM_TRACKS[0].timeRange}</span>
           </span>
         </div>
-        <div className="flex items-baseline gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+        <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
           <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 7 Sep</span>
           <span className="text-sm font-semibold text-navy">
             Track 2 Startups <span className="font-medium text-muted-foreground">· {NULDAM_TRACKS[1].timeRange}</span>
           </span>
         </div>
-        <div className="flex items-baseline gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+        <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
           <span className="w-24 shrink-0 text-xs font-bold text-primary">Wed, 2 Sep</span>
           <span className="text-sm font-semibold text-navy">
             Open Innovation Day <span className="font-medium text-muted-foreground">· {EVENT_TIME}</span>
@@ -217,7 +217,7 @@ function Landing() {
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Corporates</div>
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Let's discuss collaborative opportunities</h3>
-              <div className="mt-1 text-sm font-semibold text-primary">
+              <div className="mt-1 min-h-10 text-sm font-semibold text-primary">
                 Private 1:1 Meetings with Korea's Marine-Tech Startups
               </div>
               <NuldamInfo />
@@ -235,7 +235,7 @@ function Landing() {
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Investors</div>
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Discover investment opportunities</h3>
-              <div className="mt-1 text-sm font-semibold text-primary">
+              <div className="mt-1 min-h-10 text-sm font-semibold text-primary">
                 Reserve a Private 1:1 Session with the Founders
               </div>
               <NuldamInfo />
@@ -255,10 +255,10 @@ function Landing() {
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">
                 K-Marine Tech Open Innovation Day
               </h3>
-              <div className="mt-1 text-sm font-semibold text-primary">
+              <div className="mt-1 min-h-10 text-sm font-semibold text-primary">
                 Bridging &amp; Scaling Proven Success to Singapore
               </div>
-              <div className="mt-4 space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3 text-sm text-navy">
+              <div className="mt-4 min-h-24 space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3 text-sm text-navy">
                 <div className="flex items-center gap-2">
                   <svg className="h-4 w-4 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
@@ -274,7 +274,7 @@ function Landing() {
               </div>
               <div className="mt-3 flex-1 space-y-2">
                 {PROGRAM.map((p) => (
-                  <div key={p.id} className="flex items-baseline gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+                  <div key={p.id} className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
                     <span className="w-24 shrink-0 text-xs font-bold text-primary">{p.time}</span>
                     <span className="text-sm font-semibold text-navy">{p.title}</span>
                   </div>
