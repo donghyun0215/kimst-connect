@@ -63,6 +63,7 @@ function MeetPage() {
   const [myEmail, setMyEmail] = useState<string | null>(null);
   const [mySlots, setMySlots] = useState<Set<string>>(new Set()); // timeslot ids I already hold
 
+  const [expanded, setExpanded] = useState<string | null>(null); // company slug whose slots are open
   const [selected, setSelected] = useState<{ companySlug: string; timeslotId: string } | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
@@ -113,6 +114,10 @@ function MeetPage() {
   );
 
   const preselectCompany = companies.find((c) => c.slug === preselectSlug);
+
+  useEffect(() => {
+    if (preselectSlug) setExpanded(preselectSlug);
+  }, [preselectSlug]);
 
   function openBooking(companySlug: string, timeslotId: string) {
     setFormError(null);
@@ -278,50 +283,85 @@ function MeetPage() {
                   .
                 </p>
               )}
-              <div className="mt-4 overflow-x-auto rounded-2xl border border-border shadow-sm">
-                <table className="w-full min-w-[640px] table-fixed border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-secondary text-left text-navy">
-                      <th className="w-28 p-3 font-semibold">Time</th>
-                      {list.map((c) => (
-                        <th key={c.slug} className={`p-3 font-semibold ${preselectSlug === c.slug ? "bg-primary/10" : ""}`}>
-                          {c.name}
-                          <div className="text-[11px] font-normal text-muted-foreground">{c.sector}</div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {track.slots.map((slot) => (
-                      <tr key={slot.id} className="border-t border-border">
-                        <td className="p-3 text-xs font-semibold text-navy">{slot.time}</td>
-                        {list.map((c) => {
-                          const isBooked = booked.has(key(c.slug, slot.id));
-                          const iHoldThisTime = mySlots.has(slot.id);
-                          return (
-                            <td key={c.slug} className={`p-2.5 ${preselectSlug === c.slug ? "bg-primary/5" : ""}`}>
-                              {isBooked ? (
-                                <span className="inline-flex rounded-full bg-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground">
-                                  Full
-                                </span>
-                              ) : (
+
+              <div className="mt-4 space-y-3">
+                {list.map((c) => {
+                  const isOpen = expanded === c.slug;
+                  const openCount = track.slots.filter((slot) => !booked.has(key(c.slug, slot.id))).length;
+                  return (
+                    <div
+                      key={c.slug}
+                      className={`overflow-hidden rounded-2xl border shadow-sm transition ${
+                        isOpen ? "border-primary/40 bg-card" : "border-border bg-card"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(isOpen ? null : c.slug)}
+                        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-base font-bold text-navy">{c.name}</span>
+                          <span className="block truncate text-xs text-muted-foreground">{c.sector}</span>
+                        </span>
+                        <span className="flex shrink-0 items-center gap-3">
+                          <span
+                            className={`hidden rounded-full px-2.5 py-1 text-[11px] font-semibold sm:inline-flex ${
+                              openCount > 0 ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {openCount > 0 ? `${openCount} slot${openCount > 1 ? "s" : ""} open` : "Fully booked"}
+                          </span>
+                          <svg
+                            className={`h-4 w-4 text-primary transition-transform ${isOpen ? "rotate-180" : ""}`}
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                          >
+                            <path d="m6 9 6 6 6-6" />
+                          </svg>
+                        </span>
+                      </button>
+
+                      {isOpen && (
+                        <div className="border-t border-border px-5 py-4">
+                          <div className="text-xs font-semibold text-muted-foreground">
+                            {track.dateLabel} · {NULDAM_VENUE}
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2.5">
+                            {track.slots.map((slot) => {
+                              const isBooked = booked.has(key(c.slug, slot.id));
+                              const iHoldThisTime = mySlots.has(slot.id);
+                              if (isBooked) {
+                                return (
+                                  <span
+                                    key={slot.id}
+                                    className="inline-flex items-center rounded-full bg-muted px-4 py-2 text-xs font-semibold text-muted-foreground line-through"
+                                  >
+                                    {slot.time}
+                                  </span>
+                                );
+                              }
+                              return (
                                 <button
+                                  key={slot.id}
                                   type="button"
                                   disabled={loading || iHoldThisTime}
                                   onClick={() => openBooking(c.slug, slot.id)}
                                   title={iHoldThisTime ? "You already booked this time" : undefined}
-                                  className="inline-flex rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+                                  className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-background px-4 py-2 text-xs font-semibold text-primary shadow-sm transition hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                                 >
-                                  Book
+                                  {slot.time}
                                 </button>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

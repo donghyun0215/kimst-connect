@@ -27,20 +27,16 @@ function NuldamInfo() {
       <div className="mt-2 space-y-2">
         <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
           <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 31 Aug</span>
-          <span className="text-sm font-semibold text-navy">
-            Track 1 Startups <span className="font-medium text-muted-foreground">· {NULDAM_TRACKS[0].timeRange}</span>
+          <span className="min-w-0 text-sm font-semibold text-navy">
+            Track 1
+            <span className="ml-2 text-xs font-normal text-muted-foreground">{NULDAM_TRACKS[0].timeRange}</span>
           </span>
         </div>
         <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
           <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 7 Sep</span>
-          <span className="text-sm font-semibold text-navy">
-            Track 2 Startups <span className="font-medium text-muted-foreground">· {NULDAM_TRACKS[1].timeRange}</span>
-          </span>
-        </div>
-        <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
-          <span className="w-24 shrink-0 text-xs font-bold text-primary">Wed, 2 Sep</span>
-          <span className="text-sm font-semibold text-navy">
-            Open Innovation Day <span className="font-medium text-muted-foreground">· {EVENT_TIME}</span>
+          <span className="min-w-0 text-sm font-semibold text-navy">
+            Track 2
+            <span className="ml-2 text-xs font-normal text-muted-foreground">{NULDAM_TRACKS[1].timeRange}</span>
           </span>
         </div>
       </div>
@@ -162,7 +158,7 @@ function Landing() {
               K-Marine Tech Open Innovation Week
             </h1>
             <p className="mt-4 max-w-2xl text-[1.5rem] leading-snug text-primary-foreground/90 md:text-[1.8rem]">
-              Bringing & Scaling Korea's Proven Success to Singapore
+              Bridging & Scaling Korea's Proven Success to Singapore
             </p>
             <p className="mt-6 max-w-2xl text-[0.9rem] leading-relaxed text-primary-foreground/85 md:text-[1rem]">
               KIMST's flagship accelerator is bringing a selective group of pioneering Korean marine science
@@ -217,37 +213,31 @@ function Landing() {
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Corporates</div>
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Let's discuss collaborative opportunities</h3>
-              <div className="mt-1 min-h-10 text-sm font-semibold text-primary">
-                Reserve a Private 1:1 Session with the Founders
-              </div>
-              <NuldamInfo />
               <Link
                 to="/meet"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
-                Schedule a Meeting
+                Reserve a 1:1 meeting
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
               </Link>
+              <NuldamInfo />
             </div>
 
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Investors</div>
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Discover investment opportunities</h3>
-              <div className="mt-1 min-h-10 text-sm font-semibold text-primary">
-                Reserve a Private 1:1 Session with the Founders
-              </div>
-              <NuldamInfo />
               <Link
                 to="/meet"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
-                Schedule a Meeting
+                Reserve a 1:1 meeting
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
               </Link>
+              <NuldamInfo />
             </div>
 
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
@@ -329,13 +319,11 @@ function Landing() {
                         height={750}
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                       />
-                      {s.logo && (
-                        <span className="absolute bottom-2 left-2 inline-flex items-center rounded-lg bg-white/95 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
-                          <img src={s.logo} alt="" className="h-4 w-auto object-contain sm:h-5" />
-                        </span>
-                      )}
                     </Link>
                     <div className="flex min-w-0 flex-1 flex-col gap-2 p-3.5">
+                      {s.logo && (
+                        <img src={s.logo} alt={`${s.name} logo`} className="h-5 w-auto self-start object-contain sm:h-6" />
+                      )}
                       <div className="truncate text-[10px] font-medium uppercase tracking-widest text-primary">{s.sector}</div>
                       <Link
                         to="/companies/$slug"
