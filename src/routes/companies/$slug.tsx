@@ -252,7 +252,7 @@ function CompanyOnePager() {
           <div>
             <div className="text-base font-bold text-navy">Meet {company.name} in Singapore</div>
             <div className="text-xs text-muted-foreground">
-              Private 30-min 1:1 · 2 September 2026 · IMDA Office, Level 5
+              Private 30-min 1:1 · 2 September 2026 · Resort World Convention Centre, Sentosa
             </div>
           </div>
           <div className="flex flex-wrap gap-2.5">

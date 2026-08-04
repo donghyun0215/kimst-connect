@@ -49,6 +49,28 @@ create table if not exists public.booking_events (
 
 alter table public.booking_events enable row level security;
 
+-- ── rsvps table ─────────────────────────────────────────────────
+-- One row per attendee (email-unique). Captures which program blocks they
+-- will attend: Success Story Showcase, Networking Lunch (catering headcount),
+-- and 1:1 Onsite Meetups. Re-submitting with the same email updates choices.
+create table if not exists public.rsvps (
+  id uuid primary key default gen_random_uuid(),
+  full_name text not null,
+  organisation text not null,
+  job_title text not null,
+  email text not null unique,
+  phone text not null,
+  primary_interest text,
+  notes text,
+  attend_showcase boolean not null default false,
+  attend_lunch boolean not null default false,
+  attend_meetups boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
+);
+
+alter table public.rsvps enable row level security;
+
 -- ── service_role grants ─────────────────────────────────────────
 -- With "Automatically expose new tables" disabled on the project, even
 -- service_role needs explicit table privileges. All reads/writes go through
@@ -56,6 +78,7 @@ alter table public.booking_events enable row level security;
 grant usage on schema public to service_role;
 grant select, insert, update, delete on public.bookings to service_role;
 grant select, insert on public.booking_events to service_role;
+grant select, insert, update, delete on public.rsvps to service_role;
 alter default privileges in schema public grant all on tables to service_role;
 
 -- ── public availability view ────────────────────────────────────
@@ -79,6 +102,12 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.booking_events;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.rsvps;
 exception when duplicate_object then null;
 end $$;
 

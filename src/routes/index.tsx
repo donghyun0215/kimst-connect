@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import heroImg from "@/assets/hero-singapore.jpg";
 import kimstLogo from "@/assets/kimst-logo.png";
 import { companies, TRACKS } from "@/data/companies";
@@ -7,6 +8,54 @@ import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
 export const Route = createFileRoute("/")({
   component: Landing,
 });
+
+const ORGANIZER_EMAIL = "support@lodestart.ai";
+
+function ContactOrganizer() {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(ORGANIZER_EMAIL);
+    } catch {
+      // Older/locked-down browsers: fall back to a hidden textarea
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = ORGANIZER_EMAIL;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch {
+        // If even that fails, the address is still shown in the tooltip below
+      }
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2200);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={handleCopy}
+        title={ORGANIZER_EMAIL}
+        className="rounded-full bg-sky-500 px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-sky-400 sm:px-4 sm:py-2 sm:text-sm"
+      >
+        {copied ? "✓ Email copied" : (
+          <>Contact<span className="hidden sm:inline"> Organizer</span></>
+        )}
+      </button>
+      {copied && (
+        <span className="absolute right-0 top-full z-40 mt-2 whitespace-nowrap rounded-lg bg-navy px-3 py-2 text-[11px] font-medium text-white shadow-elegant">
+          {ORGANIZER_EMAIL}
+        </span>
+      )}
+    </div>
+  );
+}
 
 const tracks = (["track1", "track2"] as const).map((trackId) => ({
   title: TRACKS[trackId].title,
@@ -44,12 +93,7 @@ function Landing() {
               <a href="#startups" className="rounded-full bg-primary px-2.5 py-1.5 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2">Startups</a>
               <a href="#about" className="rounded-full bg-primary px-2.5 py-1.5 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2">About</a>
             </nav>
-            <a
-              href="mailto:support@lodestart.ai"
-              className="rounded-full bg-sky-500 px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-sky-400 sm:px-4 sm:py-2 sm:text-sm"
-            >
-              Contact<span className="hidden sm:inline"> Organizer</span>
-            </a>
+            <ContactOrganizer />
           </div>
         </div>
       </header>

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { companies } from "@/data/companies";
 import { EVENT_DATE, TIMESLOTS } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
-import { adminListBookings, adminCancelBooking, adminListEvents, type AdminBooking, type BookingEvent } from "@/lib/booking.server";
+import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
 import kimstLogo from "@/assets/kimst-logo.png";
 
 export const Route = createFileRoute("/admin")({
@@ -24,6 +24,7 @@ function AdminPage() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [events, setEvents] = useState<BookingEvent[]>([]);
+  const [rsvps, setRsvps] = useState<AdminRsvp[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
@@ -31,9 +32,10 @@ function AdminPage() {
 
   const load = useCallback(async (pw: string) => {
     setLoading(true);
-    const [res, evRes] = await Promise.all([
+    const [res, evRes, rsvpRes] = await Promise.all([
       adminListBookings({ data: { password: pw } }),
       adminListEvents({ data: { password: pw } }),
+      adminListRsvps({ data: { password: pw } }),
     ]);
     setLoading(false);
     if (!res.ok) {
@@ -43,6 +45,7 @@ function AdminPage() {
     }
     setBookings(res.bookings);
     if (evRes.ok) setEvents(evRes.events);
+    if (rsvpRes.ok) setRsvps(rsvpRes.rsvps);
     setLastSync(new Date());
     return true;
   }, []);
@@ -68,6 +71,9 @@ function AdminPage() {
         load(pwRef.current);
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "booking_events" }, () => {
+        load(pwRef.current);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "rsvps" }, () => {
         load(pwRef.current);
       })
       .subscribe();
@@ -193,12 +199,80 @@ function AdminPage() {
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {/* STATS */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <Stat label="Total bookings" value={`${bookings.length}`} />
-          <Stat label="Slots filled" value={`${bookings.length} / ${totalSlots}`} />
-          <Stat label="Companies" value={`${companies.length}`} />
-          <Stat label="Sessions" value={`${TIMESLOTS.length}`} />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+          <Stat label="Total RSVPs" value={`${rsvps.length}`} />
+          <Stat label="Showcase" value={`${rsvps.filter((r) => r.attend_showcase).length}`} />
+          <Stat label="Lunch (catering)" value={`${rsvps.filter((r) => r.attend_lunch).length}`} />
+          <Stat label="1:1 attendees" value={`${rsvps.filter((r) => r.attend_meetups).length}`} />
+          <Stat label="1:1 slots filled" value={`${bookings.length} / ${totalSlots}`} />
         </div>
+
+        {/* RSVP TABLE */}
+        <h2 className="mt-10 text-lg font-bold text-navy">RSVPs ({rsvps.length})</h2>
+        <p className="text-sm text-muted-foreground">Everyone who registered, with the sessions they'll attend.</p>
+        {rsvps.length === 0 ? (
+          <div className="mt-4 rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
+            No RSVPs yet.
+          </div>
+        ) : (
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-border shadow-sm">
+            <table className="w-full min-w-[860px] border-collapse text-sm">
+              <thead>
+                <tr className="bg-secondary text-left text-navy">
+                  <th className="p-3 font-semibold">Name</th>
+                  <th className="p-3 font-semibold">Organisation</th>
+                  <th className="p-3 font-semibold">Contact</th>
+                  <th className="p-3 font-semibold">Sessions</th>
+                  <th className="p-3 font-semibold">1:1 meetings</th>
+                  <th className="p-3 font-semibold">Interest</th>
+                  <th className="p-3 font-semibold">Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rsvps.map((r) => {
+                  const myMeetings = bookings.filter((b) => b.email === r.email);
+                  return (
+                    <tr key={r.id} className="border-t border-border align-top">
+                      <td className="p-3 font-semibold text-navy">
+                        {r.full_name}
+                        <div className="text-xs font-normal text-muted-foreground">{r.job_title}</div>
+                      </td>
+                      <td className="p-3">{r.organisation}</td>
+                      <td className="p-3">
+                        <a href={`mailto:${r.email}`} className="text-primary hover:underline">{r.email}</a>
+                        <div className="text-xs text-muted-foreground">{r.phone}</div>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex flex-wrap gap-1.5">
+                          {r.attend_showcase && (
+                            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">Showcase</span>
+                          )}
+                          {r.attend_lunch && (
+                            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800">Lunch</span>
+                          )}
+                          {r.attend_meetups && (
+                            <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-800">1:1</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-xs">
+                        {myMeetings.length === 0
+                          ? <span className="text-muted-foreground">—</span>
+                          : myMeetings.map((b) => {
+                              const c = companies.find((x) => x.slug === b.company_id);
+                              const t = TIMESLOTS.find((x) => x.id === b.timeslot_id);
+                              return <div key={b.id}>{t?.label}: {c?.name ?? b.company_id}</div>;
+                            })}
+                      </td>
+                      <td className="p-3 text-xs">{r.primary_interest ?? "—"}</td>
+                      <td className="p-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* GRID VIEW */}
         <h2 className="mt-10 text-lg font-bold text-navy">Slot Grid</h2>
