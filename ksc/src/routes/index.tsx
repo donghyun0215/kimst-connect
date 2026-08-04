@@ -218,14 +218,14 @@ function Landing() {
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Corporates</div>
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Let's discuss collaborative opportunities</h3>
               <div className="mt-1 min-h-10 text-sm font-semibold text-primary">
-                Private 1:1 Meetings with Korea's Marine-Tech Startups
+                Reserve a Private 1:1 Session with the Founders
               </div>
               <NuldamInfo />
               <Link
                 to="/meet"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
-                Book a 1:1 meeting
+                Schedule a Meeting
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
