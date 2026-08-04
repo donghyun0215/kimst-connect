@@ -3,7 +3,7 @@ import { useState } from "react";
 import heroImg from "@/assets/hero-singapore.jpg";
 import kimstLogo from "@/assets/kimst-logo.png";
 import { companies, TRACKS } from "@/data/companies";
-import { EVENT_DATE, EVENT_TIME, EVENT_VENUE, PROGRAM, isNuldamCompany, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS } from "@/data/timeslots";
+import { EVENT_ADDRESS, EVENT_VENUE, PROGRAM, isNuldamCompany, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS } from "@/data/timeslots";
 import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
 
 export const Route = createFileRoute("/")({
@@ -266,15 +266,17 @@ function Landing() {
                   </svg>
                   <span>
                     <span className="font-semibold">{EVENT_VENUE}, Sentosa</span>
-                    <span className="block text-xs text-muted-foreground">{EVENT_DATE} · {EVENT_TIME}</span>
+                    <span className="block text-xs text-muted-foreground">{EVENT_ADDRESS}</span>
                   </span>
                 </div>
               </div>
               <div className="mt-3 flex-1 space-y-2">
                 {PROGRAM.map((p) => (
                   <div key={p.id} className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
-                    <span className="w-24 shrink-0 text-xs font-bold text-primary">{p.time}</span>
-                    <span className="text-sm font-semibold text-navy">{p.title}</span>
+                    <span className="w-24 shrink-0 text-xs font-bold text-primary">Wed, 2 Sep</span>
+                    <span className="min-w-0 text-sm font-semibold text-navy">
+                      {p.title}<span className="ml-2 text-xs font-normal text-muted-foreground">{p.time}</span>
+                    </span>
                   </div>
                 ))}
               </div>
