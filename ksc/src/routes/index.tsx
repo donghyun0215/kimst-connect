@@ -3,6 +3,7 @@ import { useState } from "react";
 import heroImg from "@/assets/hero-singapore.jpg";
 import kimstLogo from "@/assets/kimst-logo.png";
 import { companies, TRACKS } from "@/data/companies";
+import { EVENT_DATE, EVENT_TIME, EVENT_VENUE } from "@/data/timeslots";
 import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
 
 export const Route = createFileRoute("/")({
@@ -136,7 +137,7 @@ function Landing() {
                 href="#rsvp"
                 className="btn-hero inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold"
               >
-                Join EMA-Marine Day
+                Join Open Innovation Day
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
@@ -213,7 +214,26 @@ function Landing() {
 
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">Open to all</div>
-              <h3 className="mt-2 text-2xl font-bold text-navy">EMA-Marine Day</h3>
+              <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">
+                K-Marine Tech Open Innovation Day
+              </h3>
+              <div className="mt-1 text-sm font-semibold text-primary">
+                Bringing &amp; Scaling Proven Success to Singapore
+              </div>
+              <div className="mt-4 space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3 text-sm text-navy">
+                <div className="flex items-center gap-2">
+                  <svg className="h-4 w-4 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
+                  </svg>
+                  <span className="font-semibold">{EVENT_DATE}</span> · {EVENT_TIME}
+                </div>
+                <div className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <span>{EVENT_VENUE}, Sentosa</span>
+                </div>
+              </div>
               <p className="mt-3 flex-1 text-muted-foreground">
                 Learn, Connect, and Scale: Discover how pioneering entrepreneurs partner with
                 industry leaders to achieve mutual growth. Join our 1:1 Round Table Meetings and
