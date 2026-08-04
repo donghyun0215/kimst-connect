@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { companies } from "@/data/companies";
-import { EVENT_DATE, TIMESLOTS } from "@/data/timeslots";
+import { EVENT_DATE, TIMESLOTS, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_COMPANY_SLUGS, getSlotInfo } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
 import kimstLogo from "@/assets/kimst-logo.png";
@@ -199,12 +199,13 @@ function AdminPage() {
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {/* STATS */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <Stat label="Total RSVPs" value={`${rsvps.length}`} />
           <Stat label="Showcase" value={`${rsvps.filter((r) => r.attend_showcase).length}`} />
           <Stat label="Lunch (catering)" value={`${rsvps.filter((r) => r.attend_lunch).length}`} />
           <Stat label="1:1 attendees" value={`${rsvps.filter((r) => r.attend_meetups).length}`} />
-          <Stat label="1:1 slots filled" value={`${bookings.length} / ${totalSlots}`} />
+          <Stat label="Event 1:1 filled" value={`${bookings.filter((b) => b.timeslot_id.startsWith("slot")).length} / ${totalSlots}`} />
+          <Stat label="Nuldam 1:1 booked" value={`${bookings.filter((b) => b.timeslot_id.startsWith("n")).length}`} />
         </div>
 
         {/* RSVP TABLE */}
@@ -261,7 +262,7 @@ function AdminPage() {
                           : myMeetings.map((b) => {
                               const c = companies.find((x) => x.slug === b.company_id);
                               const t = TIMESLOTS.find((x) => x.id === b.timeslot_id);
-                              return <div key={b.id}>{t?.label}: {c?.name ?? b.company_id}</div>;
+                              return <div key={b.id}>{getSlotInfo(b.timeslot_id).label} {getSlotInfo(b.timeslot_id).time}: {c?.name ?? b.company_id}</div>;
                             })}
                       </td>
                       <td className="p-3 text-xs">{r.primary_interest ?? "—"}</td>
@@ -275,7 +276,7 @@ function AdminPage() {
         )}
 
         {/* GRID VIEW */}
-        <h2 className="mt-10 text-lg font-bold text-navy">Slot Grid</h2>
+        <h2 className="mt-10 text-lg font-bold text-navy">Open Innovation Day — 1:1 Rounds (2 Sep)</h2>
         <p className="text-sm text-muted-foreground">Click a filled slot to cancel it and reopen it for others.</p>
         <div className="mt-4 overflow-x-auto rounded-2xl border border-border shadow-sm">
           <table className="w-full min-w-[560px] border-collapse text-sm">
@@ -329,6 +330,61 @@ function AdminPage() {
         </div>
 
         {/* FULL TABLE */}
+        {/* NULDAM 1:1 GRIDS */}
+        <h2 className="mt-12 text-lg font-bold text-navy">Nuldam 1:1 Meetings ({NULDAM_VENUE})</h2>
+        <p className="text-sm text-muted-foreground">Click a filled slot to cancel it and reopen it for others.</p>
+        {NULDAM_TRACKS.map((track) => {
+          const list = companies.filter((c) => NULDAM_COMPANY_SLUGS[track.id].includes(c.slug));
+          return (
+            <div key={track.id} className="mt-5">
+              <div className="text-sm font-bold text-navy">
+                {track.id === "track1" ? "Track 1" : "Track 2"} · {track.dateLabel} · {track.timeRange}
+              </div>
+              <div className="mt-2 overflow-x-auto rounded-2xl border border-border shadow-sm">
+                <table className="w-full min-w-[620px] border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-secondary text-left text-navy">
+                      <th className="w-28 p-3 font-semibold">Time</th>
+                      {list.map((c) => (
+                        <th key={c.slug} className="p-3 font-semibold">{c.name}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {track.slots.map((slot) => (
+                      <tr key={slot.id} className="border-t border-border">
+                        <td className="p-3 text-xs font-semibold text-navy">{slot.time}</td>
+                        {list.map((c) => {
+                          const b = byKey.get(`${c.slug}__${slot.id}`);
+                          return (
+                            <td key={c.slug} className="p-2">
+                              {b ? (
+                                <button
+                                  onClick={() => handleCancel(b)}
+                                  disabled={cancelling === b.id}
+                                  title="Click to cancel this booking"
+                                  className="group inline-flex flex-col items-start rounded-lg border border-primary/30 bg-primary/5 px-2.5 py-1.5 text-left transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+                                >
+                                  <span className="text-xs font-semibold text-navy group-hover:text-red-700">{b.full_name}</span>
+                                  <span className="text-[10px] text-muted-foreground group-hover:text-red-600">{b.organisation}</span>
+                                </button>
+                              ) : (
+                                <span className="inline-flex rounded-lg border border-dashed border-border px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                                  Open
+                                </span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })}
+
         <h2 className="mt-12 text-lg font-bold text-navy">All Bookings ({bookings.length})</h2>
         {bookings.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
@@ -362,8 +418,8 @@ function AdminPage() {
                       <td className="p-3">{b.organisation}</td>
                       <td className="p-3">{c?.name ?? b.company_id}</td>
                       <td className="p-3">
-                        {t?.label}
-                        <div className="text-xs text-muted-foreground">{t?.time}</div>
+                        {getSlotInfo(b.timeslot_id).label}
+                        <div className="text-xs text-muted-foreground">{getSlotInfo(b.timeslot_id).time}</div>
                       </td>
                       <td className="p-3">
                         <a href={`mailto:${b.email}`} className="text-primary hover:underline">
@@ -436,7 +492,7 @@ function AdminPage() {
                   <span className="text-muted-foreground">·</span>
                   <span>{c?.name ?? ev.company_id}</span>
                   <span className="text-muted-foreground">·</span>
-                  <span>{t?.label ?? ev.timeslot_id}</span>
+                  <span>{getSlotInfo(ev.timeslot_id).label} {getSlotInfo(ev.timeslot_id).time}</span>
                   <span className="ml-auto shrink-0 text-xs text-muted-foreground">
                     {new Date(ev.created_at).toLocaleString()}
                   </span>

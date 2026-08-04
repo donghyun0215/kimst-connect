@@ -3,7 +3,7 @@ import { useState } from "react";
 import heroImg from "@/assets/hero-singapore.jpg";
 import kimstLogo from "@/assets/kimst-logo.png";
 import { companies, TRACKS } from "@/data/companies";
-import { EVENT_DATE, EVENT_TIME, EVENT_VENUE } from "@/data/timeslots";
+import { EVENT_DATE, EVENT_TIME, EVENT_VENUE, PROGRAM, isNuldamCompany } from "@/data/timeslots";
 import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
 
 export const Route = createFileRoute("/")({
@@ -84,7 +84,7 @@ function Landing() {
             <img
               src={kimstLogo}
               alt="KIMST Korea Institute of Marine Science & Technology Promotion"
-              className="h-14 w-auto shrink-0 object-contain sm:h-16 md:h-20"
+              className="h-16 w-auto shrink-0 object-contain sm:h-20 md:h-24"
             />
           </a>
 
@@ -180,45 +180,43 @@ function Landing() {
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Corporates</div>
               <h3 className="mt-2 text-2xl font-bold text-navy">Tailored Pilot Testing & Free Trials</h3>
               <p className="mt-3 flex-1 text-muted-foreground">
-                Explore free trials and pilot opportunities with leading Korean marine tech startups.
-                Validate cutting-edge technology, test real-world use cases, and build scalable partnerships.
+                Let's discuss collaborative opportunities.
               </p>
-              <a
-                href="#startups"
+              <Link
+                to="/meet"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
                 Book a 1:1 meeting
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
-              </a>
+              </Link>
             </div>
 
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Investors</div>
               <h3 className="mt-2 text-2xl font-bold text-navy">High-Growth Maritime Tech Investments</h3>
               <p className="mt-3 flex-1 text-muted-foreground">
-                Discover promising investment opportunities in cutting-edge maritime technology. Reserve a 30-minute
-                private 1:1 session with startups matched to your sector preferences, investment stage, and expansion goals.
+                Discover investment opportunities.
               </p>
-              <a
-                href="#startups"
+              <Link
+                to="/meet"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
                 Schedule a Meeting
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
-              </a>
+              </Link>
             </div>
 
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">Open to all</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Potential Partners</div>
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">
                 K-Marine Tech Open Innovation Day
               </h3>
               <div className="mt-1 text-sm font-semibold text-primary">
-                Bringing &amp; Scaling Proven Success to Singapore
+                Bridging &amp; Scaling Proven Success to Singapore
               </div>
               <div className="mt-4 space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3 text-sm text-navy">
                 <div className="flex items-center gap-2">
@@ -234,16 +232,19 @@ function Landing() {
                   <span>{EVENT_VENUE}, Sentosa</span>
                 </div>
               </div>
-              <p className="mt-3 flex-1 text-muted-foreground">
-                Learn, Connect, and Scale: Discover how pioneering entrepreneurs partner with
-                industry leaders to achieve mutual growth. Join our 1:1 Round Table Meetings and
-                connect with key industry stakeholders during the networking session.
-              </p>
+              <div className="mt-3 flex-1 space-y-2">
+                {PROGRAM.map((p) => (
+                  <div key={p.id} className="flex items-baseline gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+                    <span className="w-24 shrink-0 text-xs font-bold text-primary">{p.time}</span>
+                    <span className="text-sm font-semibold text-navy">{p.title}</span>
+                  </div>
+                ))}
+              </div>
               <Link
                 to="/book"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
-                Book a 1:1 Round Table
+                Secure Your Seat
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
@@ -316,7 +317,7 @@ function Landing() {
                       </svg>
                     </Link>
                     <Link
-                      to="/book"
+                      to={isNuldamCompany(s.slug) ? "/meet" : "/book"}
                       search={{ company: s.slug }}
                       className="inline-flex w-full min-w-0 items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-center text-[11px] font-semibold leading-tight text-primary-foreground shadow-sm transition hover:bg-primary/90"
                     >
@@ -383,7 +384,7 @@ function Landing() {
               <img
                 src={kimstLogo}
                 alt="KIMST"
-                className="h-20 w-auto object-contain"
+                className="h-24 w-auto object-contain md:h-28"
               />
 
 

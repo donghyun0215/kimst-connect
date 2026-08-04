@@ -9,6 +9,7 @@ import {
   EVENT_ADDRESS,
   PROGRAM,
   TIMESLOTS,
+  getSlotInfo,
 } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import {
@@ -250,10 +251,10 @@ function RsvpPage() {
 
   async function handleSelfCancel(b: MyBooking) {
     const c = companies.find((x) => x.slug === b.company_id);
-    const t = TIMESLOTS.find((x) => x.id === b.timeslot_id);
+    const info = getSlotInfo(b.timeslot_id);
     if (
       !confirm(
-        `Cancel your ${t?.label ?? ""} meeting with ${c?.name ?? b.company_id}?\n\nThis frees the slot for someone else and cannot be undone.`,
+        `Cancel your ${info.label} (${info.time}) meeting with ${c?.name ?? b.company_id}?\n\nThis frees the slot for someone else and cannot be undone.`,
       )
     )
       return;
@@ -285,7 +286,7 @@ function RsvpPage() {
       <header className="border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <Link to="/" className="flex items-center gap-3 min-w-0">
-            <img src={kimstLogo} alt="KIMST" className="h-14 w-auto shrink-0 object-contain sm:h-16" />
+            <img src={kimstLogo} alt="KIMST" className="h-16 w-auto shrink-0 object-contain sm:h-20" />
           </Link>
           <Link
             to="/"
@@ -620,11 +621,11 @@ function RsvpPage() {
                     return (
                       <div key={b.id} className="rounded-xl border border-border bg-background p-5">
                         <div className="text-xs font-semibold uppercase tracking-wide text-primary">
-                          1:1 {t?.label} · {t?.time}
+                          {getSlotInfo(b.timeslot_id).label} · {getSlotInfo(b.timeslot_id).time}
                         </div>
                         <div className="mt-1.5 text-lg font-bold text-navy">{c?.name ?? b.company_id}</div>
                         <div className="mt-0.5 text-xs text-muted-foreground">
-                          {EVENT_DATE} · {EVENT_VENUE}
+                          {getSlotInfo(b.timeslot_id).context}
                         </div>
                         <div className="mt-4 flex items-center justify-between gap-3">
                           {c && (

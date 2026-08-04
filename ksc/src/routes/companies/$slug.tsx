@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { getCompanyBySlug, TRACKS } from "@/data/companies";
+import { NULDAM_TRACKS, NULDAM_VENUE, isNuldamCompany, EVENT_DATE, EVENT_VENUE } from "@/data/timeslots";
 import { STARTUP_LOGOS } from "@/data/companyImages";
 import kimstLogo from "@/assets/kimst-logo.png";
 
@@ -62,6 +63,9 @@ function CompanyOnePager() {
   const company = Route.useLoaderData();
   const track = TRACKS[company.track];
   const logo = STARTUP_LOGOS[company.slug];
+  const inNuldam = isNuldamCompany(company.slug);
+  const nuldam = inNuldam ? NULDAM_TRACKS.find((t) => t.id === company.track)! : null;
+  const meetTarget = inNuldam ? ("/meet" as const) : ("/book" as const);
   const pdfHref = `/onepagers/${company.slug}.pdf`;
 
   return (
@@ -70,7 +74,7 @@ function CompanyOnePager() {
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center">
-            <img src={kimstLogo} alt="KIMST" className="h-12 w-auto shrink-0 object-contain sm:h-14" />
+            <img src={kimstLogo} alt="KIMST" className="h-16 w-auto shrink-0 object-contain sm:h-20" />
           </Link>
           <nav className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <a
@@ -88,7 +92,7 @@ function CompanyOnePager() {
               All Startups
             </Link>
             <Link
-              to="/book"
+              to={meetTarget}
               search={{ company: company.slug }}
               className="rounded-full bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2 sm:text-sm"
             >
@@ -130,7 +134,7 @@ function CompanyOnePager() {
           </p>
           <div className="mt-5 flex flex-wrap gap-2.5">
             <Link
-              to="/book"
+              to={meetTarget}
               search={{ company: company.slug }}
               className="btn-hero inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold"
             >
@@ -252,12 +256,12 @@ function CompanyOnePager() {
           <div>
             <div className="text-base font-bold text-navy">Meet {company.name} in Singapore</div>
             <div className="text-xs text-muted-foreground">
-              Private 30-min 1:1 · 2 September 2026 · Resort World Convention Centre, Sentosa
+              Private 1:1 · {nuldam ? `${nuldam.dateLabel} · ${NULDAM_VENUE}` : `${EVENT_DATE} · ${EVENT_VENUE}`}
             </div>
           </div>
           <div className="flex flex-wrap gap-2.5">
             <Link
-              to="/book"
+              to={meetTarget}
               search={{ company: company.slug }}
               className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
             >
@@ -276,7 +280,7 @@ function CompanyOnePager() {
 
       <footer className="border-t border-border bg-background">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5">
-          <img src={kimstLogo} alt="KIMST" className="h-12 w-auto object-contain" />
+          <img src={kimstLogo} alt="KIMST" className="h-20 w-auto object-contain" />
           <div className="text-xs text-muted-foreground">© 2026 KIMST · Singapore Startup Accelerator Program</div>
         </div>
       </footer>
