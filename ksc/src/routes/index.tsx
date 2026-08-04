@@ -3,12 +3,44 @@ import { useState } from "react";
 import heroImg from "@/assets/hero-singapore.jpg";
 import kimstLogo from "@/assets/kimst-logo.png";
 import { companies, TRACKS } from "@/data/companies";
-import { EVENT_DATE, EVENT_TIME, EVENT_VENUE, PROGRAM, isNuldamCompany } from "@/data/timeslots";
+import { EVENT_DATE, EVENT_TIME, EVENT_VENUE, PROGRAM, isNuldamCompany, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS } from "@/data/timeslots";
 import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
 
 export const Route = createFileRoute("/")({
   component: Landing,
 });
+
+function NuldamInfo() {
+  return (
+    <div className="mt-4 flex-1">
+      <div className="space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3 text-sm text-navy">
+        <div className="flex items-start gap-2">
+          <svg className="mt-0.5 h-4 w-4 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="3" />
+          </svg>
+          <span>
+            <span className="font-semibold">{NULDAM_VENUE}</span>
+            <span className="block text-xs text-muted-foreground">{NULDAM_ADDRESS} · Private 40-min 1:1 meetings</span>
+          </span>
+        </div>
+      </div>
+      <div className="mt-2 space-y-2">
+        <div className="flex items-baseline gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+          <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 31 Aug</span>
+          <span className="text-sm font-semibold text-navy">
+            Track 1 Startups <span className="font-medium text-muted-foreground">· {NULDAM_TRACKS[0].timeRange}</span>
+          </span>
+        </div>
+        <div className="flex items-baseline gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5">
+          <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 7 Sep</span>
+          <span className="text-sm font-semibold text-navy">
+            Track 2 Startups <span className="font-medium text-muted-foreground">· {NULDAM_TRACKS[1].timeRange}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const ORGANIZER_EMAIL = "support@lodestart.ai";
 
@@ -84,7 +116,7 @@ function Landing() {
             <img
               src={kimstLogo}
               alt="KIMST Korea Institute of Marine Science & Technology Promotion"
-              className="h-16 w-auto shrink-0 object-contain sm:h-20 md:h-24"
+              className="h-20 w-auto shrink-0 object-contain sm:h-24 md:h-32"
             />
           </a>
 
@@ -178,10 +210,8 @@ function Landing() {
           <div className="mt-14 grid gap-6 md:grid-cols-3">
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Corporates</div>
-              <h3 className="mt-2 text-2xl font-bold text-navy">Tailored Pilot Testing & Free Trials</h3>
-              <p className="mt-3 flex-1 text-muted-foreground">
-                Let's discuss collaborative opportunities.
-              </p>
+              <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Let's discuss collaborative opportunities</h3>
+              <NuldamInfo />
               <Link
                 to="/meet"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
@@ -195,10 +225,8 @@ function Landing() {
 
             <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-widest text-orange-500">For Investors</div>
-              <h3 className="mt-2 text-2xl font-bold text-navy">High-Growth Maritime Tech Investments</h3>
-              <p className="mt-3 flex-1 text-muted-foreground">
-                Discover investment opportunities.
-              </p>
+              <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">Discover investment opportunities</h3>
+              <NuldamInfo />
               <Link
                 to="/meet"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
@@ -384,7 +412,7 @@ function Landing() {
               <img
                 src={kimstLogo}
                 alt="KIMST"
-                className="h-24 w-auto object-contain md:h-28"
+                className="h-28 w-auto object-contain md:h-36"
               />
 
 
