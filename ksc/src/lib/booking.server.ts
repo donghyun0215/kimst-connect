@@ -276,3 +276,156 @@ export const adminListEvents = createServerFn({ method: "POST" })
     }
     return { ok: true, events: rows as BookingEvent[] };
   });
+
+// ── RSVP (showcase / lunch / meetups) ──────────────────────────
+
+export interface RsvpInput {
+  fullName: string;
+  organisation: string;
+  jobTitle: string;
+  email: string;
+  phone: string;
+  primaryInterest: string;
+  notes?: string;
+  attendShowcase: boolean;
+  attendLunch: boolean;
+  attendMeetups: boolean;
+  meetupSelections: { timeslotId: string; companySlug: string }[];
+}
+
+export interface RsvpResult {
+  rsvpOk: boolean;
+  message?: string;
+  bookingResults: { timeslotId: string; companySlug: string; ok: boolean; message?: string }[];
+}
+
+export const createRsvp = createServerFn({ method: "POST" })
+  .validator((data: RsvpInput) => data)
+  .handler(async ({ data }): Promise<RsvpResult> => {
+    const email = data.email?.toLowerCase().trim();
+    if (!data.fullName || !data.organisation || !data.jobTitle || !email || !data.phone) {
+      return { rsvpOk: false, message: "Missing required fields.", bookingResults: [] };
+    }
+    if (!data.attendShowcase && !data.attendLunch && !data.attendMeetups) {
+      return { rsvpOk: false, message: "Please select at least one session.", bookingResults: [] };
+    }
+
+    // Upsert by email — re-submitting updates your choices.
+    const { error: rsvpError } = await supabaseAdmin.from("rsvps").upsert(
+      {
+        full_name: data.fullName,
+        organisation: data.organisation,
+        job_title: data.jobTitle,
+        email,
+        phone: data.phone,
+        primary_interest: data.primaryInterest,
+        notes: data.notes ?? null,
+        attend_showcase: data.attendShowcase,
+        attend_lunch: data.attendLunch,
+        attend_meetups: data.attendMeetups,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "email" },
+    );
+    if (rsvpError) {
+      console.error("createRsvp upsert error:", rsvpError);
+      return { rsvpOk: false, message: "Something went wrong. Please try again.", bookingResults: [] };
+    }
+
+    // Book selected 1:1 meetups (each slot independent — one failing doesn't
+    // void the RSVP or the other slot).
+    const bookingResults: RsvpResult["bookingResults"] = [];
+    if (data.attendMeetups) {
+      for (const sel of data.meetupSelections.slice(0, 2)) {
+        const { data: inserted, error } = await supabaseAdmin
+          .from("bookings")
+          .insert({
+            company_id: sel.companySlug,
+            timeslot_id: sel.timeslotId,
+            full_name: data.fullName,
+            organisation: data.organisation,
+            job_title: data.jobTitle,
+            email,
+            phone: data.phone,
+            primary_interest: data.primaryInterest,
+            notes: data.notes ?? null,
+          })
+          .select("id")
+          .single();
+
+        if (error) {
+          let message = "Something went wrong.";
+          if (error.code === "23505") {
+            message = error.message.includes("bookings_email_timeslot_key")
+              ? "You already have a meeting in this round."
+              : "Someone just booked this slot.";
+          } else {
+            console.error("createRsvp booking error:", error);
+          }
+          bookingResults.push({ ...sel, ok: false, message });
+        } else {
+          await logEvent("booked", {
+            booking_id: inserted.id,
+            company_id: sel.companySlug,
+            timeslot_id: sel.timeslotId,
+            full_name: data.fullName,
+            organisation: data.organisation,
+            email,
+          });
+          bookingResults.push({ ...sel, ok: true });
+        }
+      }
+    }
+
+    return { rsvpOk: true, bookingResults };
+  });
+
+export interface AdminRsvp {
+  id: string;
+  full_name: string;
+  organisation: string;
+  job_title: string;
+  email: string;
+  phone: string;
+  primary_interest: string | null;
+  notes: string | null;
+  attend_showcase: boolean;
+  attend_lunch: boolean;
+  attend_meetups: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export const adminListRsvps = createServerFn({ method: "POST" })
+  .validator((data: { password: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: true; rsvps: AdminRsvp[] } | { ok: false }> => {
+    if (data.password !== ADMIN_PASSWORD) {
+      return { ok: false };
+    }
+    const { data: rows, error } = await supabaseAdmin
+      .from("rsvps")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("adminListRsvps error:", error);
+      return { ok: true, rsvps: [] };
+    }
+    return { ok: true, rsvps: rows as AdminRsvp[] };
+  });
+
+export const lookupRsvpByEmail = createServerFn({ method: "POST" })
+  .validator((data: { email: string }) => data)
+  .handler(async ({ data }): Promise<{ attend_showcase: boolean; attend_lunch: boolean; attend_meetups: boolean } | null> => {
+    const email = data.email?.toLowerCase().trim();
+    if (!email || !email.includes("@")) return null;
+    const { data: row, error } = await supabaseAdmin
+      .from("rsvps")
+      .select("attend_showcase, attend_lunch, attend_meetups")
+      .eq("email", email)
+      .maybeSingle();
+    if (error) {
+      console.error("lookupRsvpByEmail error:", error);
+      return null;
+    }
+    return row;
+  });
