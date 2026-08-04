@@ -245,9 +245,18 @@ function Landing() {
               <h3 className="mt-2 text-2xl font-bold leading-snug text-navy">
                 K-Marine Tech Open Innovation Day
               </h3>
-              <div className="mt-1 min-h-10 text-sm font-semibold text-primary">
+              <div className="mt-1 text-sm font-semibold text-primary">
                 Bridging &amp; Scaling Proven Success to Singapore
               </div>
+              <Link
+                to="/book"
+                className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+              >
+                Secure Your Seat
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
               <div className="mt-4 min-h-24 space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3 text-sm text-navy">
                 <div className="flex items-center gap-2">
                   <svg className="h-4 w-4 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -270,15 +279,6 @@ function Landing() {
                   </div>
                 ))}
               </div>
-              <Link
-                to="/book"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-              >
-                Secure Your Seat
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </Link>
             </div>
           </div>
         </div>
