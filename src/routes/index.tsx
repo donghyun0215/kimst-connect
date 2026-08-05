@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import heroImg from "@/assets/hero-singapore.jpg";
 import kimstLogo from "@/assets/kimst-logo.png";
+import myscLogo from "@/assets/logos/mysc.png";
+import lodestartLogo from "@/assets/logos/lodestart.png";
 import { companies, TRACKS } from "@/data/companies";
 import { EVENT_ADDRESS, EVENT_VENUE, PROGRAM, isNuldamCompany, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS } from "@/data/timeslots";
 import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
@@ -411,6 +413,51 @@ function Landing() {
       </section>
 
       {/* FOOTER */}
+      {/* ABOUT — HOST & ORGANIZERS */}
+      <section id="about" className="bg-secondary/40">
+        <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 md:py-16">
+          <div className="text-center">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">About the Program</div>
+            <h2 className="mt-2 font-display text-2xl font-bold text-navy md:text-3xl">Host &amp; Organizers</h2>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <div className="text-[11px] font-semibold uppercase tracking-widest text-orange-500">Host</div>
+              <div className="mt-3 flex h-14 items-center">
+                <img src={kimstLogo} alt="KIMST" className="max-h-14 w-auto object-contain" />
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                Korea Institute of Marine Science &amp; Technology Promotion (KIMST) is Korea's
+                leading government agency dedicated to driving innovation and R&amp;D promotion in
+                marine science and technology.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <div className="text-[11px] font-semibold uppercase tracking-widest text-orange-500">Organizer</div>
+              <div className="mt-3 flex h-14 items-center">
+                <img src={myscLogo} alt="MYSC" className="max-h-9 w-auto object-contain" />
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                MYSC is a social impact startup accelerator in South Korea that supports social
+                innovation through business, with 122 cumulative impact investments (USD 35.4M AUM)
+                and 500+ companies accelerated over the past 5 years.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <div className="text-[11px] font-semibold uppercase tracking-widest text-orange-500">Organizer</div>
+              <div className="mt-3 flex h-14 items-center">
+                <img src={lodestartLogo} alt="LodestarT" className="max-h-14 w-auto object-contain" />
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                LodestarT is a dynamic ecosystem builder and collaborative platform bridging South
+                Korea and Singapore — connecting Korean startups with Singaporean investors and
+                strategic partners to drive tangible cross-border growth.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-border bg-background">
         <div className="mx-auto max-w-7xl px-6 py-12">
           <div className="flex flex-wrap items-start justify-between gap-8">
@@ -437,7 +484,7 @@ function Landing() {
             </div>
           </div>
           <div className="mt-8 border-t border-border pt-6 text-xs text-muted-foreground">
-            © 2026 KIMST · Singapore Startup Accelerator Program
+            © 2026 · Hosted by KIMST · Organized by MYSC &amp; LodestarT
           </div>
         </div>
       </footer>
