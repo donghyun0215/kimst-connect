@@ -3,6 +3,7 @@ import { useState } from "react";
 import heroImg from "@/assets/hero-singapore.jpg";
 import kimstLogo from "@/assets/kimst-logo.png";
 import myscLogo from "@/assets/logos/mysc.png";
+import lodestartLogo from "@/assets/logos/lodestart.png";
 import { companies, TRACKS } from "@/data/companies";
 import { EVENT_ADDRESS, EVENT_VENUE, PROGRAM, isNuldamCompany, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS } from "@/data/timeslots";
 import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
@@ -445,9 +446,7 @@ function Landing() {
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="text-[11px] font-semibold uppercase tracking-widest text-orange-500">Organizer</div>
               <div className="mt-4 flex h-24 items-center">
-                <span className="font-display text-4xl font-bold tracking-tight text-navy">
-                  Lodestar<span className="text-green-600">T</span>
-                </span>
+                <img src={lodestartLogo} alt="LodestarT" className="max-h-24 w-auto object-contain" />
               </div>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                 LodestarT is a dynamic ecosystem builder and collaborative platform bridging South
