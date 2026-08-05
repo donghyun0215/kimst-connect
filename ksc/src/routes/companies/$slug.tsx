@@ -74,7 +74,7 @@ function CompanyOnePager() {
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center">
-            <img src={kimstLogo} alt="KIMST" className="h-16 w-auto shrink-0 object-contain sm:h-24 md:h-28" />
+            <img src={kimstLogo} alt="KIMST" className="h-10 w-auto shrink-0 object-contain sm:h-12 md:h-14" />
           </Link>
           <nav className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <a
@@ -280,7 +280,7 @@ function CompanyOnePager() {
 
       <footer className="border-t border-border bg-background">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5">
-          <img src={kimstLogo} alt="KIMST" className="h-28 w-auto object-contain" />
+          <img src={kimstLogo} alt="KIMST" className="h-14 w-auto object-contain" />
           <div className="text-xs text-muted-foreground">© 2026 KIMST · Singapore Startup Accelerator Program</div>
         </div>
       </footer>

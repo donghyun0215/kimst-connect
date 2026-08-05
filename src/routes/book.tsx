@@ -286,7 +286,7 @@ function RsvpPage() {
       <header className="border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <Link to="/" className="flex items-center gap-3 min-w-0">
-            <img src={kimstLogo} alt="KIMST" className="h-16 w-auto shrink-0 object-contain sm:h-24 md:h-28" />
+            <img src={kimstLogo} alt="KIMST" className="h-10 w-auto shrink-0 object-contain sm:h-12 md:h-14" />
           </Link>
           <Link
             to="/"
