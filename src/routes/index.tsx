@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import heroImg from "@/assets/hero-singapore.jpg";
 import kimstLogo from "@/assets/kimst-logo.png";
+import kimstLogoTrimmed from "@/assets/kimst-logo-trimmed.png";
 import myscLogo from "@/assets/logos/mysc.png";
 import lodestartLogo from "@/assets/logos/lodestart.png";
 import { companies, TRACKS } from "@/data/companies";
@@ -424,7 +425,7 @@ function Landing() {
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="text-[11px] font-semibold uppercase tracking-widest text-orange-500">Host</div>
               <div className="mt-4 flex h-24 items-center">
-                <img src={kimstLogo} alt="KIMST" className="max-h-24 w-auto object-contain" />
+                <img src={kimstLogoTrimmed} alt="KIMST" className="max-h-16 w-full max-w-[260px] object-contain object-left" />
               </div>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                 Korea Institute of Marine Science &amp; Technology Promotion (KIMST) is Korea's
@@ -435,7 +436,7 @@ function Landing() {
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="text-[11px] font-semibold uppercase tracking-widest text-orange-500">Organizer</div>
               <div className="mt-4 flex h-24 items-center">
-                <img src={myscLogo} alt="MYSC" className="max-h-14 w-auto object-contain" />
+                <img src={myscLogo} alt="MYSC" className="max-h-12 w-full max-w-[200px] object-contain object-left" />
               </div>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                 MYSC is a social impact startup accelerator in South Korea that supports social
@@ -446,7 +447,7 @@ function Landing() {
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="text-[11px] font-semibold uppercase tracking-widest text-orange-500">Organizer</div>
               <div className="mt-4 flex h-24 items-center">
-                <img src={lodestartLogo} alt="LodestarT" className="max-h-14 w-full max-w-[260px] object-contain object-left" />
+                <img src={lodestartLogo} alt="LodestarT" className="max-h-16 w-full max-w-[260px] object-contain object-left" />
               </div>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                 LodestarT is a dynamic ecosystem builder and collaborative platform bridging South
