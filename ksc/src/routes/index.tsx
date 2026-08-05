@@ -446,7 +446,7 @@ function Landing() {
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="text-[11px] font-semibold uppercase tracking-widest text-orange-500">Organizer</div>
               <div className="mt-4 flex h-24 items-center">
-                <img src={lodestartLogo} alt="LodestarT" className="max-h-24 w-auto object-contain" />
+                <img src={lodestartLogo} alt="LodestarT" className="max-h-14 w-full max-w-[260px] object-contain object-left" />
               </div>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                 LodestarT is a dynamic ecosystem builder and collaborative platform bridging South
