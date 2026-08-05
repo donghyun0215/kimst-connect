@@ -322,17 +322,22 @@ function Landing() {
                       />
                     </Link>
                     <div className="flex min-w-0 flex-1 flex-col gap-2 p-3.5">
-                      {s.logo && (
-                        <img src={s.logo} alt={`${s.name} logo`} className="h-5 w-auto self-start object-contain sm:h-6" />
-                      )}
-                      <div className="truncate text-[10px] font-medium uppercase tracking-widest text-primary">{s.sector}</div>
                       <Link
                         to="/companies/$slug"
                         params={{ slug: s.slug }}
-                        className="text-sm font-bold leading-snug text-navy hover:text-primary"
+                        className="flex items-center gap-2 self-start"
+                        title={s.name}
                       >
-                        {s.name}
+                        {s.logo && (
+                          <img src={s.logo} alt={`${s.name} logo`} className="h-5 w-auto object-contain sm:h-6" />
+                        )}
+                        {s.slug === "eastsea-brother" && (
+                          <span className="text-base font-bold leading-none" style={{ color: "#222b40" }}>
+                            East Sea Brother
+                          </span>
+                        )}
                       </Link>
+                      <div className="truncate text-[10px] font-medium uppercase tracking-widest text-primary">{s.sector}</div>
                       <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{s.tagline}</p>
                   <div className="mt-auto flex w-full min-w-0 flex-col gap-2 pt-1">
                     <Link
