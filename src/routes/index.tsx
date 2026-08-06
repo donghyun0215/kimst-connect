@@ -5,7 +5,7 @@ import kimstLogo from "@/assets/kimst-logo.png";
 import myscLogo from "@/assets/logos/mysc.png";
 import lodestartLogo from "@/assets/logos/lodestart.png";
 import { companies, TRACKS } from "@/data/companies";
-import { EVENT_ADDRESS, EVENT_VENUE, PROGRAM, isNuldamCompany, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS } from "@/data/timeslots";
+import { EVENT_ADDRESS, EVENT_VENUE, PROGRAM, isNuldamCompany, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS, NULDAM_MAP_URL } from "@/data/timeslots";
 import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
 
 export const Route = createFileRoute("/")({
@@ -21,7 +21,14 @@ function NuldamInfo() {
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="3" />
           </svg>
           <span>
-            <span className="font-semibold">{NULDAM_VENUE}</span>
+            <a
+              href={NULDAM_MAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline decoration-primary/30 underline-offset-2 transition hover:text-primary hover:decoration-primary"
+            >
+              {NULDAM_VENUE}
+            </a>
             <span className="block text-xs text-muted-foreground">{NULDAM_ADDRESS} · Private 40-min 1:1 meetings</span>
           </span>
         </div>

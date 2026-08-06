@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { companies, TRACKS } from "@/data/companies";
-import { NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS, NULDAM_COMPANY_SLUGS } from "@/data/timeslots";
+import { NULDAM_TRACKS, NULDAM_VENUE, NULDAM_ADDRESS, NULDAM_COMPANY_SLUGS, NULDAM_MAP_URL } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { createBooking, type BookingInput } from "@/lib/booking.server";
 import kimstLogo from "@/assets/kimst-logo.png";
@@ -201,7 +201,18 @@ function MeetPage() {
           <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Book a 1:1 Meeting</h1>
           <p className="mt-2 max-w-2xl text-sm text-primary-foreground/85 sm:text-base">
             Reserve a private 30-minute session with the startups of your choice at{" "}
-            <span className="font-semibold text-primary-foreground">{NULDAM_VENUE}</span>, {NULDAM_ADDRESS}.
+            <span className="font-semibold text-primary-foreground">{NULDAM_VENUE}</span>, {NULDAM_ADDRESS}.{" "}
+            <a
+              href={NULDAM_MAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-semibold text-primary-foreground underline underline-offset-2 hover:text-white"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="3" />
+              </svg>
+              View on Google Maps
+            </a>
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {NULDAM_TRACKS.map((t) => (
@@ -327,7 +338,15 @@ function MeetPage() {
                       {isOpen && (
                         <div className="border-t border-border px-5 py-4">
                           <div className="text-xs font-semibold text-muted-foreground">
-                            {track.dateLabel} · {NULDAM_VENUE}
+                            {track.dateLabel} ·{" "}
+                            <a
+                              href={NULDAM_MAP_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline underline-offset-2 transition hover:text-primary"
+                            >
+                              {NULDAM_VENUE}
+                            </a>
                           </div>
                           <div className="mt-3 flex flex-wrap gap-2.5">
                             {track.slots.map((slot) => {
@@ -388,7 +407,14 @@ function MeetPage() {
                   {selectedTrack?.dateLabel} · {selectedSlot.time}
                 </div>
                 <h3 className="mt-1 text-xl font-bold text-navy">{selectedCompany.name}</h3>
-                <div className="text-xs text-muted-foreground">{NULDAM_VENUE}</div>
+                <a
+                  href={NULDAM_MAP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground underline underline-offset-2 transition hover:text-primary"
+                >
+                  {NULDAM_VENUE} · Map
+                </a>
               </div>
               <button
                 type="button"

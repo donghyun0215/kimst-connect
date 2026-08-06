@@ -47,6 +47,9 @@ export const PROGRAM: ProgramBlock[] = [
 // ── Nuldam 1:1 in-depth meetings (separate booking from the 9/2 event) ──
 export const NULDAM_VENUE = "Nuldam Space, SCAPE #02-14/15";
 export const NULDAM_ADDRESS = "2 Orchard Link, Singapore 237878";
+// Opens the venue in Google Maps (works in the app on mobile, browser on desktop)
+export const NULDAM_MAP_URL =
+  "https://www.google.com/maps/search/?api=1&query=Nuldam+Space+SCAPE+2+Orchard+Link+Singapore+237878";
 
 export interface NuldamTrack {
   id: "track1" | "track2";
