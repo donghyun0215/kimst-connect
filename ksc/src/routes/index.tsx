@@ -267,7 +267,7 @@ function Landing() {
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="3" />
                   </svg>
                   <span>
-                    <span className="font-semibold">{EVENT_VENUE}, Sentosa</span>
+                    <span className="font-semibold">{EVENT_VENUE}</span>
                     <span className="block text-xs text-muted-foreground">{EVENT_ADDRESS}</span>
                   </span>
                 </div>
