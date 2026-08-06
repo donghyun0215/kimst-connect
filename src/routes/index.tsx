@@ -222,7 +222,7 @@ function Landing() {
               <h3 className="mt-2 min-h-[4.5rem] text-2xl font-bold leading-snug text-navy">Let's discuss collaborative opportunities</h3>
               <Link
                 to="/meet"
-                className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                className="mt-4 inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 md:px-3 md:text-[11px] lg:px-4 lg:text-xs xl:px-6 xl:text-sm"
               >
                 Reserve a 1:1 meeting
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -237,7 +237,7 @@ function Landing() {
               <h3 className="mt-2 min-h-[4.5rem] text-2xl font-bold leading-snug text-navy">Discover investment opportunities</h3>
               <Link
                 to="/meet"
-                className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                className="mt-4 inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 md:px-3 md:text-[11px] lg:px-4 lg:text-xs xl:px-6 xl:text-sm"
               >
                 Reserve a 1:1 meeting
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -254,10 +254,11 @@ function Landing() {
               </h3>
               <Link
                 to="/book"
-                className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                className="mt-4 inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-3 py-3 text-[13px] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 md:px-2.5 md:text-[10px] lg:px-3.5 lg:text-[11px] xl:px-4 xl:text-[13px]"
               >
-                Reserve a 1:1 meeting
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <span className="md:hidden xl:inline">Join for Showcase / Lunch / Meetups</span>
+                <span className="hidden md:inline xl:hidden">Showcase / Lunch / Meetups</span>
+                <svg className="hidden h-3.5 w-3.5 shrink-0 lg:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
               </Link>
