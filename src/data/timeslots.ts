@@ -8,7 +8,7 @@ export const EVENT_DATE = "Wednesday, 2 September 2026";
 export const EVENT_TIME = "10:00 – 16:00";
 // Venue is being finalised — shown as TBC across the site until confirmed.
 export const EVENT_VENUE = "Venue to be confirmed";
-export const EVENT_ADDRESS = "Sentosa, Singapore · details announced soon";
+export const EVENT_ADDRESS = "Singapore · details announced soon";
 
 // 1:1 meetup rounds ("Session" is reserved for the program blocks below)
 export const TIMESLOTS: Timeslot[] = [
