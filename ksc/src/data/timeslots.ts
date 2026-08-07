@@ -6,9 +6,11 @@ export interface Timeslot {
 
 export const EVENT_DATE = "Wednesday, 2 September 2026";
 export const EVENT_TIME = "10:00 – 16:00";
-// Venue is being finalised — shown as TBC across the site until confirmed.
-export const EVENT_VENUE = "Venue to be confirmed";
-export const EVENT_ADDRESS = "Singapore · details announced soon";
+export const EVENT_VENUE = "Suntec Singapore Convention & Exhibition Centre, Level 3, Room 302";
+export const EVENT_ADDRESS = "1 Raffles Boulevard, Singapore 039593";
+// Opens the venue in Google Maps (app on mobile, browser on desktop)
+export const EVENT_MAP_URL =
+  "https://www.google.com/maps/search/?api=1&query=Suntec+Singapore+Convention+%26+Exhibition+Centre+1+Raffles+Boulevard+Singapore+039593";
 
 // 1:1 meetup rounds ("Session" is reserved for the program blocks below)
 export const TIMESLOTS: Timeslot[] = [

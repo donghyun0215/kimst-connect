@@ -7,6 +7,7 @@ import {
   EVENT_TIME,
   EVENT_VENUE,
   EVENT_ADDRESS,
+  EVENT_MAP_URL,
   PROGRAM,
   TIMESLOTS,
   getSlotInfo,
@@ -305,7 +306,15 @@ function RsvpPage() {
           </div>
           <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Reserve Your Seat</h1>
           <p className="mt-2 text-sm text-primary-foreground/85 sm:text-base">
-            {EVENT_VENUE} · {EVENT_ADDRESS}
+            <a
+              href={EVENT_MAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 transition hover:text-white"
+            >
+              {EVENT_VENUE}
+            </a>{" "}
+            · {EVENT_ADDRESS}
           </p>
 
           {/* Program overview */}
