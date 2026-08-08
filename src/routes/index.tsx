@@ -47,7 +47,7 @@ function NuldamInfo() {
           </span>
         </div>
         <div className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2">
-          <span className="w-24 shrink-0 text-xs font-bold text-primary">Mon, 7 Sep</span>
+          <span className="w-24 shrink-0 text-xs font-bold text-primary">Fri, 4 Sep</span>
           <span className="min-w-0 text-sm font-semibold text-navy">
             Track 2
             <span className="ml-2 text-xs font-normal text-muted-foreground">{NULDAM_TRACKS[1].timeRange}</span>

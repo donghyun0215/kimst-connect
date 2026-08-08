@@ -74,7 +74,7 @@ export const NULDAM_TRACKS: NuldamTrack[] = [
   },
   {
     id: "track2",
-    dateLabel: "Monday, 7 September 2026",
+    dateLabel: "Friday, 4 September 2026",
     timeRange: "14:00 – 17:00",
     slots: [
       { id: "n2-1400", label: "14:00", time: "14:00 – 14:40" },

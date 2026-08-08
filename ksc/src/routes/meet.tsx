@@ -229,7 +229,7 @@ function MeetPage() {
           {preselectCompany && (
             <div className="mt-4 inline-flex rounded-full bg-primary-foreground/15 px-4 py-2 text-sm">
               Booking for <span className="mx-1.5 font-bold">{preselectCompany.name}</span> — jump to{" "}
-              {preselectCompany.track === "track1" ? "Track 1 (31 Aug)" : "Track 2 (7 Sep)"} below.
+              {preselectCompany.track === "track1" ? "Track 1 (31 Aug)" : "Track 2 (4 Sep)"} below.
             </div>
           )}
         </div>
