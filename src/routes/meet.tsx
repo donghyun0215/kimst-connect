@@ -286,7 +286,7 @@ function MeetPage() {
 
               {track.id === "track2" && (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Wise Bio (YS Bio) and Con Trâu Eco meet partners 1:1 at the Open Innovation Day
+                  Wise Bio (YS Bio) and East Sea Brother meet partners 1:1 at the Open Innovation Day
                   on 2 September —{" "}
                   <Link to="/book" className="font-semibold text-primary hover:underline">
                     RSVP here

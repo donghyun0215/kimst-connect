@@ -86,10 +86,12 @@ export const NULDAM_TRACKS: NuldamTrack[] = [
 ];
 
 // Which companies take part in the Nuldam in-depth meetings.
-// (YS Bio and Con Trâu Eco meet 1:1 at the 2 Sep Open Innovation Day only.)
+// (YS Bio and East Sea Brother meet 1:1 at the 2 Sep Open Innovation Day only —
+//  East Sea Brother attends 4 Sep mornings only, so Con Trâu Eco takes the
+//  afternoon 1:1 slot per the organisers.)
 export const NULDAM_COMPANY_SLUGS: Record<"track1" | "track2", string[]> = {
   track1: ["cutshion", "doublt", "willog", "xylolabs"],
-  track2: ["eastsea-brother", "haesong-snt"],
+  track2: ["contrau-eco", "haesong-snt"],
 };
 
 export function isNuldamCompany(slug: string): boolean {
