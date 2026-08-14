@@ -444,7 +444,11 @@ function RsvpPage() {
                           {TIMESLOTS.map((t) => {
                             if (!isSlotOffered(c.slug, t.id)) {
                               return (
-                                <td key={t.id} className="p-3 text-center text-muted-foreground/50">—</td>
+                                <td key={t.id} className="p-3">
+                                  <span className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground/40">
+                                    —
+                                  </span>
+                                </td>
                               );
                             }
                             const isBooked = booked.has(key(c.slug, t.id));
