@@ -16,7 +16,15 @@ export const EVENT_MAP_URL =
 export const TIMESLOTS: Timeslot[] = [
   { id: "slot1", label: "Round 1", time: "14:00 – 14:30" },
   { id: "slot2", label: "Round 2", time: "14:50 – 15:20" },
+  { id: "slot3", label: "Round 3", time: "15:30 – 16:00" },
 ];
+
+// Round 3 is an extra ad-hoc round — only these companies take bookings for it.
+export const ROUND3_COMPANY_SLUGS = ["xylolabs"];
+
+export function isSlotOffered(companySlug: string, timeslotId: string): boolean {
+  return timeslotId !== "slot3" || ROUND3_COMPANY_SLUGS.includes(companySlug);
+}
 
 export interface ProgramBlock {
   id: "showcase" | "lunch" | "meetups";

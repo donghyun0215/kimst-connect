@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { companies } from "@/data/companies";
-import { EVENT_DATE, TIMESLOTS, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_COMPANY_SLUGS, getSlotInfo } from "@/data/timeslots";
+import { EVENT_DATE, TIMESLOTS, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_COMPANY_SLUGS, getSlotInfo, isSlotOffered } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
 import kimstLogo from "@/assets/kimst-logo.png";
@@ -131,7 +131,10 @@ function AdminPage() {
     return map;
   }, [bookings]);
 
-  const totalSlots = companies.length * TIMESLOTS.length;
+  const totalSlots = companies.reduce(
+    (n, c) => n + TIMESLOTS.filter((t) => isSlotOffered(c.slug, t.id)).length,
+    0,
+  );
 
   // ── LOGIN GATE ──────────────────────────────────────────────
   if (!authed) {
@@ -295,6 +298,11 @@ function AdminPage() {
                 <tr key={c.slug} className="border-t border-border">
                   <td className="p-3 font-semibold text-navy">{c.name}</td>
                   {TIMESLOTS.map((t) => {
+                    if (!isSlotOffered(c.slug, t.id)) {
+                      return (
+                        <td key={t.id} className="p-3 text-center text-muted-foreground/40">—</td>
+                      );
+                    }
                     const b = byKey.get(`${c.slug}__${t.id}`);
                     return (
                       <td key={t.id} className="p-3">

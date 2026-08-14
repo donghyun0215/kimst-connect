@@ -336,7 +336,7 @@ export const createRsvp = createServerFn({ method: "POST" })
     // void the RSVP or the other slot).
     const bookingResults: RsvpResult["bookingResults"] = [];
     if (data.attendMeetups) {
-      for (const sel of data.meetupSelections.slice(0, 2)) {
+      for (const sel of data.meetupSelections.slice(0, 3)) {
         const { data: inserted, error } = await supabaseAdmin
           .from("bookings")
           .insert({

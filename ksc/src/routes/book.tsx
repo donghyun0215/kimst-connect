@@ -11,6 +11,7 @@ import {
   PROGRAM,
   TIMESLOTS,
   getSlotInfo,
+  isSlotOffered,
 } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import {
@@ -77,6 +78,7 @@ function RsvpPage() {
   const [selections, setSelections] = useState<Record<string, string | null>>({
     slot1: null,
     slot2: null,
+    slot3: null,
   });
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
@@ -169,7 +171,11 @@ function RsvpPage() {
       setAttend((a) => ({ ...a, meetups: true }));
       setSelections((prev) => {
         const openSlot = TIMESLOTS.find(
-          (t) => !booked.has(key(preselectSlug, t.id)) && !myBookings[t.id] && !prev[t.id],
+          (t) =>
+            isSlotOffered(preselectSlug, t.id) &&
+            !booked.has(key(preselectSlug, t.id)) &&
+            !myBookings[t.id] &&
+            !prev[t.id],
         );
         if (!openSlot) return prev;
         return { ...prev, [openSlot.id]: preselectSlug };
@@ -234,7 +240,7 @@ function RsvpPage() {
     setLookupEmail(payload.email);
     setLookupResults(null);
     setSubmitted({ attend: { ...attend }, bookings: result.bookingResults });
-    setSelections({ slot1: null, slot2: null });
+    setSelections({ slot1: null, slot2: null, slot3: null });
     await refreshAvailability();
     await syncMyBookingsFromServer(payload.email);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -413,7 +419,7 @@ function RsvpPage() {
               <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.03] p-4 sm:p-5">
                 <div className="text-sm font-bold text-navy">Pick your startups</div>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  One startup per round, up to two meetings. Greyed-out slots are already taken.
+                  One startup per round. Greyed-out slots are already taken.
                 </p>
                 <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-card">
                   <table className="w-full min-w-[560px] border-collapse text-sm">
@@ -436,6 +442,11 @@ function RsvpPage() {
                             <div className="text-xs text-muted-foreground">{c.sector}</div>
                           </td>
                           {TIMESLOTS.map((t) => {
+                            if (!isSlotOffered(c.slug, t.id)) {
+                              return (
+                                <td key={t.id} className="p-3 text-center text-muted-foreground/50">—</td>
+                              );
+                            }
                             const isBooked = booked.has(key(c.slug, t.id));
                             const isMine = myBookings[t.id] === c.slug;
                             const iHaveThisRound = Boolean(myBookings[t.id]) && !isMine;
