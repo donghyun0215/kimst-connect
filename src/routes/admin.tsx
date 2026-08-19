@@ -131,6 +131,9 @@ function AdminPage() {
     return map;
   }, [bookings]);
 
+  const guestCount = (v: string | null) =>
+    v ? v.split(",").map((x) => x.trim()).filter(Boolean).length : 0;
+  const totalGuests = rsvps.reduce((n, r) => n + guestCount(r.additional_attendees), 0);
   const totalSlots = companies.reduce(
     (n, c) => n + TIMESLOTS.filter((t) => isSlotOffered(c.slug, t.id)).length,
     0,
@@ -203,7 +206,7 @@ function AdminPage() {
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {/* STATS */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          <Stat label="Total RSVPs" value={`${rsvps.length}`} />
+          <Stat label="Total RSVPs" value={`${rsvps.length}${totalGuests ? ` (+${totalGuests} guests)` : ""}`} />
           <Stat label="Showcase" value={`${rsvps.filter((r) => r.attend_showcase).length}`} />
           <Stat label="Lunch (catering)" value={`${rsvps.filter((r) => r.attend_lunch).length}`} />
           <Stat label="1:1 attendees" value={`${rsvps.filter((r) => r.attend_meetups).length}`} />
@@ -240,6 +243,11 @@ function AdminPage() {
                       <td className="p-3 font-semibold text-navy">
                         {r.full_name}
                         <div className="text-xs font-normal text-muted-foreground">{r.job_title}</div>
+                        {r.additional_attendees && (
+                          <div className="mt-1 text-xs font-normal text-primary">
+                            +{guestCount(r.additional_attendees)}: {r.additional_attendees}
+                          </div>
+                        )}
                       </td>
                       <td className="p-3">{r.organisation}</td>
                       <td className="p-3">
