@@ -53,7 +53,6 @@ interface FormState {
   phone: string;
   primaryInterest: string;
   notes: string;
-  additionalAttendees: string;
 }
 
 const emptyForm: FormState = {
@@ -64,7 +63,6 @@ const emptyForm: FormState = {
   phone: "",
   primaryInterest: "",
   notes: "",
-  additionalAttendees: "",
 };
 
 function RsvpPage() {
@@ -221,7 +219,6 @@ function RsvpPage() {
       phone: form.phone.trim(),
       primaryInterest: form.primaryInterest,
       notes: form.notes.trim() || undefined,
-      additionalAttendees: form.additionalAttendees.trim() || undefined,
       attendShowcase: attend.showcase,
       attendLunch: attend.lunch,
       attendMeetups: attend.meetups,
@@ -573,21 +570,6 @@ function RsvpPage() {
                     </option>
                   ))}
                 </select>
-              </div>
-            </div>
-            <div className="mt-4">
-              <label className="text-xs font-semibold text-navy">
-                Additional attendees from your organisation{" "}
-                <span className="font-normal text-muted-foreground">(optional — for name badges)</span>
-              </label>
-              <input
-                value={form.additionalAttendees}
-                onChange={(e) => setForm({ ...form, additionalAttendees: e.target.value })}
-                placeholder="e.g. Jane Tan (Co-founder), David Lim (Marketing)"
-                className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-              />
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                Colleagues joining you at the event — they'll share your session choices, and we'll prepare badges for everyone listed.
               </div>
             </div>
             <div className="mt-4">
