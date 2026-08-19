@@ -287,6 +287,7 @@ export interface RsvpInput {
   phone: string;
   primaryInterest: string;
   notes?: string;
+  additionalAttendees?: string;
   attendShowcase: boolean;
   attendLunch: boolean;
   attendMeetups: boolean;
@@ -320,6 +321,7 @@ export const createRsvp = createServerFn({ method: "POST" })
         phone: data.phone,
         primary_interest: data.primaryInterest,
         notes: data.notes ?? null,
+        additional_attendees: data.additionalAttendees?.trim() || null,
         attend_showcase: data.attendShowcase,
         attend_lunch: data.attendLunch,
         attend_meetups: data.attendMeetups,
@@ -389,6 +391,7 @@ export interface AdminRsvp {
   phone: string;
   primary_interest: string | null;
   notes: string | null;
+  additional_attendees: string | null;
   attend_showcase: boolean;
   attend_lunch: boolean;
   attend_meetups: boolean;
