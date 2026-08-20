@@ -19,8 +19,18 @@ export const TIMESLOTS: Timeslot[] = [
   { id: "slot3", label: "Round 3", time: "15:30 – 16:00" },
 ];
 
-// Round 3 is an extra ad-hoc round — only these companies take bookings for it.
-export const ROUND3_COMPANY_SLUGS = ["xylolabs"];
+// Round 3 opened to all companies (organiser request, 20 Aug) — extra investor
+// demand after R1/R2 filled up. Remove slugs here to restrict again if needed.
+export const ROUND3_COMPANY_SLUGS = [
+  "cutshion",
+  "doublt",
+  "willog",
+  "xylolabs",
+  "eastsea-brother",
+  "haesong-snt",
+  "contrau-eco",
+  "ys-bio",
+];
 
 export function isSlotOffered(companySlug: string, timeslotId: string): boolean {
   return timeslotId !== "slot3" || ROUND3_COMPANY_SLUGS.includes(companySlug);
