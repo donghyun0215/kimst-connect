@@ -221,7 +221,7 @@ function RsvpPage() {
       phone: form.phone.trim(),
       primaryInterest: form.primaryInterest,
       notes: form.notes.trim() || undefined,
-      additionalAttendees: form.additionalAttendees.trim() || undefined,
+      additionalAttendees: attend.meetups ? form.additionalAttendees.trim() || undefined : undefined,
       attendShowcase: attend.showcase,
       attendLunch: attend.lunch,
       attendMeetups: attend.meetups,
@@ -575,21 +575,24 @@ function RsvpPage() {
                 </select>
               </div>
             </div>
-            <div className="mt-4">
-              <label className="text-xs font-semibold text-navy">
-                Additional attendees from your organisation{" "}
-                <span className="font-normal text-muted-foreground">(optional — for name badges)</span>
-              </label>
-              <input
-                value={form.additionalAttendees}
-                onChange={(e) => setForm({ ...form, additionalAttendees: e.target.value })}
-                placeholder="e.g. Jane Tan (Co-founder), David Lim (Marketing)"
-                className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-              />
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                Colleagues joining you at the event — they'll share your session choices, and we'll prepare badges for everyone listed.
+            {attend.meetups && (
+              <div className="mt-4">
+                <label className="text-xs font-semibold text-navy">
+                  Colleagues joining your 1:1 meetings{" "}
+                  <span className="font-normal text-muted-foreground">(optional — for name badges)</span>
+                </label>
+                <input
+                  value={form.additionalAttendees}
+                  onChange={(e) => setForm({ ...form, additionalAttendees: e.target.value })}
+                  placeholder="e.g. Jane Tan (Co-founder), David Lim (Marketing)"
+                  className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
+                />
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  1:1 slots are booked per organisation, so list colleagues sitting in with you here. For the
+                  Showcase and Networking Lunch, each attendee should simply register individually.
+                </div>
               </div>
-            </div>
+            )}
             <div className="mt-4">
               <label className="text-xs font-semibold text-navy">
                 Any notes or questions? <span className="font-normal text-muted-foreground">(optional)</span>
