@@ -224,6 +224,7 @@ const TRACK_META = [
 
 function SchedulePage() {
   const [trackId, setTrackId] = useState<"t1" | "t2">("t1");
+  const [selectedDay, setSelectedDay] = useState<ScheduleDay | null>(null);
   const track = TRACK_META.find((t) => t.id === trackId)!;
 
   return (
@@ -281,9 +282,11 @@ function SchedulePage() {
         {/* Desktop: at-a-glance grid (whole track on one screen) */}
         <div className="mt-6 hidden gap-3 lg:grid lg:grid-cols-5">
           {track.days.map((d) => (
-            <div
+            <button
+              type="button"
+              onClick={() => setSelectedDay(d)}
               key={`${track.id}-g-${d.date}`}
-              className={`flex flex-col overflow-hidden rounded-xl border shadow-sm ${
+              className={`flex flex-col overflow-hidden rounded-xl border text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:border-primary/50 cursor-pointer ${
                 d.free
                   ? "border-dashed border-border bg-card/50"
                   : d.joint
@@ -324,7 +327,7 @@ function SchedulePage() {
                   )}
                 </div>
               )}
-            </div>
+            </button>
           ))}
         </div>
 
@@ -397,6 +400,85 @@ function SchedulePage() {
         <footer className="mt-10 text-center text-xs text-muted-foreground">
           Hosted by KIMST · Organized by MYSC &amp; LodestarT
         </footer>
+
+        {selectedDay && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm"
+            onClick={() => setSelectedDay(null)}
+          >
+            <div
+              className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-card shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <header className={`flex items-start justify-between gap-3 px-6 py-4 ${selectedDay.joint ? "bg-primary/10" : "bg-secondary/60"}`}>
+                <div>
+                  <div className="text-lg font-bold text-navy">
+                    {selectedDay.date} ({selectedDay.dow})
+                    <span className={`ml-2 rounded-full px-2.5 py-0.5 align-middle text-[11px] font-semibold ${
+                      selectedDay.joint ? "bg-primary text-primary-foreground" : "bg-navy/90 text-white"
+                    }`}>
+                      {selectedDay.theme}
+                    </span>
+                  </div>
+                  {selectedDay.headcount && (
+                    <div className="mt-1 text-xs text-muted-foreground">{selectedDay.headcount}</div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDay(null)}
+                  className="rounded-full p-1.5 text-muted-foreground transition hover:bg-secondary hover:text-navy"
+                  aria-label="Close"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              </header>
+              <div className="divide-y divide-border/70 px-6">
+                {selectedDay.free ? (
+                  <div className="py-5 text-sm text-muted-foreground">자유일정</div>
+                ) : (
+                  selectedDay.items.map((it, i) => (
+                    <div key={i} className="flex gap-3 py-3">
+                      <span className="w-24 shrink-0 pt-0.5 text-xs font-bold text-primary">{it.time ?? ""}</span>
+                      <span className="min-w-0">
+                        <span className={`text-sm ${it.highlight ? "font-bold text-navy" : "font-medium text-navy/90"}`}>
+                          {it.title}
+                        </span>
+                        {it.venue && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.venue)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`mt-0.5 block text-xs underline underline-offset-2 transition hover:text-primary ${
+                              it.highlight ? "font-semibold text-green-700" : "text-muted-foreground"
+                            }`}
+                          >
+                            📍 {it.venue}
+                          </a>
+                        )}
+                        {it.note && <span className="mt-0.5 block text-xs text-muted-foreground">{it.note}</span>}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+              {selectedDay.transport && (
+                <div className="bg-secondary/40 px-6 py-2.5 text-xs text-muted-foreground">차량: {selectedDay.transport}</div>
+              )}
+              <div className="px-6 py-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDay(null)}
+                  className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
