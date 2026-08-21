@@ -378,9 +378,14 @@ function SchedulePage() {
                           {it.title}
                         </span>
                         {it.venue && (
-                          <span className={`mt-0.5 block text-xs ${it.highlight ? "font-semibold text-green-700" : "text-muted-foreground"}`}>
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.venue)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`mt-0.5 block text-xs underline underline-offset-2 ${it.highlight ? "font-semibold text-green-700" : "text-muted-foreground"}`}
+                          >
                             📍 {it.venue}
-                          </span>
+                          </a>
                         )}
                         {it.note && <span className="mt-0.5 block text-xs text-muted-foreground">{it.note}</span>}
                       </span>
