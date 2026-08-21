@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as MeetRouteImport } from './routes/meet'
+import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as CompaniesSlugRouteImport } from './routes/companies/$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const MeetRoute = MeetRouteImport.update({
   path: '/meet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompaniesSlugRoute = CompaniesSlugRouteImport.update({
   id: '/companies/$slug',
   path: '/companies/$slug',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/book': typeof BookRoute
   '/meet': typeof MeetRoute
+  '/schedule': typeof ScheduleRoute
   '/companies/$slug': typeof CompaniesSlugRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/book': typeof BookRoute
   '/meet': typeof MeetRoute
+  '/schedule': typeof ScheduleRoute
   '/companies/$slug': typeof CompaniesSlugRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,23 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/book': typeof BookRoute
   '/meet': typeof MeetRoute
+  '/schedule': typeof ScheduleRoute
   '/companies/$slug': typeof CompaniesSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/book' | '/meet' | '/companies/$slug'
+  fullPaths:
+    '/' | '/admin' | '/book' | '/meet' | '/schedule' | '/companies/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/book' | '/meet' | '/companies/$slug'
-  id: '__root__' | '/' | '/admin' | '/book' | '/meet' | '/companies/$slug'
+  to: '/' | '/admin' | '/book' | '/meet' | '/schedule' | '/companies/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/book'
+    | '/meet'
+    | '/schedule'
+    | '/companies/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +93,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   BookRoute: typeof BookRoute
   MeetRoute: typeof MeetRoute
+  ScheduleRoute: typeof ScheduleRoute
   CompaniesSlugRoute: typeof CompaniesSlugRoute
 }
 
@@ -109,6 +127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeetRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/companies/$slug': {
       id: '/companies/$slug'
       path: '/companies/$slug'
@@ -124,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   BookRoute: BookRoute,
   MeetRoute: MeetRoute,
+  ScheduleRoute: ScheduleRoute,
   CompaniesSlugRoute: CompaniesSlugRoute,
 }
 export const routeTree = rootRouteImport
