@@ -230,7 +230,7 @@ function SchedulePage() {
     <div className="min-h-screen bg-secondary/40">
       {/* Nav — logo only, deliberately no site links (unlisted page) */}
       <header className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
           <img src={kimstLogo} alt="KIMST" className="h-10 w-auto object-contain sm:h-12" />
           <div className="text-right">
             <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
@@ -241,7 +241,7 @@ function SchedulePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-5 pb-16 pt-8">
+      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <div className="text-center">
           <h1 className="font-display text-2xl font-bold text-navy md:text-3xl">프로그램 상세 일정</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -278,8 +278,58 @@ function SchedulePage() {
           {track.note && <span className="block mt-1">{track.note}</span>}
         </div>
 
-        {/* Day cards */}
-        <div className="mt-6 space-y-4">
+        {/* Desktop: at-a-glance grid (whole track on one screen) */}
+        <div className="mt-6 hidden gap-3 lg:grid lg:grid-cols-5">
+          {track.days.map((d) => (
+            <div
+              key={`${track.id}-g-${d.date}`}
+              className={`flex flex-col overflow-hidden rounded-xl border shadow-sm ${
+                d.free
+                  ? "border-dashed border-border bg-card/50"
+                  : d.joint
+                    ? "border-primary/50 bg-card ring-1 ring-primary/20"
+                    : "border-border bg-card"
+              }`}
+            >
+              <div className={`px-3 py-2 ${d.joint ? "bg-primary/10" : d.free ? "" : "bg-secondary/60"}`}>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-bold text-navy">
+                    {d.date} <span className="text-[10px] font-semibold text-muted-foreground">({d.dow})</span>
+                  </span>
+                </div>
+                <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[9px] font-semibold leading-none ${
+                  d.joint ? "bg-primary text-primary-foreground" : d.free ? "bg-muted text-muted-foreground" : "bg-navy/90 text-white"
+                }`}>
+                  {d.theme}
+                </span>
+              </div>
+              {d.free ? (
+                <div className="px-3 py-3 text-[11px] text-muted-foreground">자유일정</div>
+              ) : (
+                <div className="flex-1 space-y-1.5 px-3 py-2">
+                  {d.items.map((it, i) => (
+                    <div key={i} className="text-[11px] leading-snug">
+                      {it.time && <span className="mr-1 font-bold text-primary">{it.time}</span>}
+                      <span className={it.highlight ? "font-bold text-navy" : "text-navy/80"}>{it.title}</span>
+                      {it.highlight && it.venue && (
+                        <span className="block truncate text-[10px] font-semibold text-green-700" title={it.venue}>
+                          📍 {it.venue}
+                        </span>
+                      )}
+                      {it.note && <span className="block text-[10px] text-muted-foreground">{it.note}</span>}
+                    </div>
+                  ))}
+                  {d.headcount && (
+                    <div className="pt-1 text-[9px] text-muted-foreground">{d.headcount}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile: day-by-day timeline */}
+        <div className="mt-6 space-y-4 lg:hidden">
           {track.days.map((d) => (
             <section
               key={`${track.id}-${d.date}`}
