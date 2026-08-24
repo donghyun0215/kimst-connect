@@ -126,3 +126,22 @@ plus a 1/2/3-column card grid.
 
 Verified: tsc ✓ build ✓ dev-server render ✓ (no visual regression testing
 available in this environment — owner to eyeball).
+
+---
+
+## 2026-08-24 — Lounge entry screen + privacy notice (client request)
+
+**From Tammy (KakaoTalk):** scanning the QR flew past the first screen too
+quickly; she asked for a deliberate entry step and a privacy notice beneath it.
+
+- QR arrivals no longer auto-authenticate. The key is held and a welcome card
+  is shown — event eyebrow, lounge title, one line on what it is, and an
+  "Enter Virtual Networking Lounge" button that performs the load.
+- New `LoungeNotice` renders under **both** entry paths (QR and email gate):
+  what the directory shows, exclusive access, no direct contact info, and the
+  data-management route (in-lounge link form or support@lodestart.ai).
+- In-lounge footer line now carries the same support address so opt-out is
+  actionable from inside too.
+
+Verified: tsc ✓ build ✓; QR path renders the button and does not enter on load;
+notice present on both paths.

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import kimstLogo from "@/assets/kimst-logo.png";
 import {
   listLoungeProfiles,
@@ -70,6 +70,48 @@ function LinkIcon({ className }: { className?: string }) {
   );
 }
 
+function LoungeNotice() {
+  return (
+    <section className="mt-6 rounded-2xl border border-border/70 bg-card/60 p-5">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-navy">
+        Networking Lounge notice
+      </h2>
+      <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">
+        To facilitate professional networking during K-Marine Tech Open Innovation Day, this
+        directory displays the name, organisation, designation and primary business interests of
+        registered attendees.
+      </p>
+      <dl className="mt-3 space-y-2.5 text-[11px] leading-relaxed">
+        <div>
+          <dt className="inline font-semibold text-navy">Exclusive access. </dt>
+          <dd className="inline text-muted-foreground">
+            This directory is strictly private and accessible only to verified attendees present at
+            the event.
+          </dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold text-navy">No direct contact info. </dt>
+          <dd className="inline text-muted-foreground">
+            Personal contact information such as email addresses and phone numbers is not displayed
+            or shared.
+          </dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold text-navy">Data management. </dt>
+          <dd className="inline text-muted-foreground">
+            To update your details or opt out of being listed, use “Add or update my link” inside
+            the lounge, or contact the organising team at{" "}
+            <a href="mailto:support@lodestart.ai" className="font-medium text-primary hover:underline">
+              support@lodestart.ai
+            </a>
+            .
+          </dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
 function LoungePage() {
   const { key } = Route.useSearch();
   const [email, setEmail] = useState("");
@@ -110,10 +152,8 @@ function LoungePage() {
     }
   };
 
-  useEffect(() => {
-    if (key) void load({ key });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  // A QR scan lands here holding a key, but we deliberately do not enter
+  // automatically — the visitor gets a beat to read the notice and tap in.
 
   const submitContact = async () => {
     if (!cEmail.trim() || cBusy) return;
@@ -175,34 +215,56 @@ function LoungePage() {
       <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
         {!profiles ? (
           <div className="mx-auto max-w-md">
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <h1 className="font-display text-xl font-bold text-navy">Attendees only</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Enter the email you used to RSVP to browse everyone joining on 2 September and keep
-                the conversations going afterwards.
-              </p>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && email.trim() && void load({ email: email.trim() })}
-                placeholder="you@company.com"
-                className="mt-4 w-full rounded-lg border border-input px-3 py-2.5 text-base sm:text-sm"
-              />
-              {gateError && <p className="mt-2 text-xs text-red-600">{gateError}</p>}
-              <button
-                type="button"
-                disabled={!email.trim() || loading}
-                onClick={() => void load({ email: email.trim() })}
-                className="mt-4 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-              >
-                {loading ? "Checking…" : "Enter the lounge"}
-              </button>
-              <p className="mt-3 text-[11px] text-muted-foreground">
-                Cards show name, organisation and job title only. Emails and phone numbers are never
-                displayed.
-              </p>
-            </div>
+            {key && !gateError ? (
+              /* QR arrival — welcome, then enter on tap */
+              <div className="rounded-2xl border border-border bg-card p-7 text-center shadow-sm">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  K-Marine Tech Open Innovation Day
+                </div>
+                <h1 className="mt-2 font-display text-2xl font-bold leading-tight text-navy">
+                  Virtual Networking Lounge
+                </h1>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  See who else is in the room today — name, company and role — and keep the
+                  conversations going after the event.
+                </p>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => void load({ key })}
+                  className="mt-6 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {loading ? "Opening…" : "Enter Virtual Networking Lounge"}
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                <h1 className="font-display text-xl font-bold text-navy">Attendees only</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Enter the email you used to RSVP to browse everyone joining on 2 September and keep
+                  the conversations going afterwards.
+                </p>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && email.trim() && void load({ email: email.trim() })}
+                  placeholder="you@company.com"
+                  className="mt-4 w-full rounded-lg border border-input px-3 py-2.5 text-base sm:text-sm"
+                />
+                {gateError && <p className="mt-2 text-xs text-red-600">{gateError}</p>}
+                <button
+                  type="button"
+                  disabled={!email.trim() || loading}
+                  onClick={() => void load({ email: email.trim() })}
+                  className="mt-4 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {loading ? "Checking…" : "Enter the lounge"}
+                </button>
+              </div>
+            )}
+
+            <LoungeNotice />
           </div>
         ) : (
           <div className="lg:grid lg:grid-cols-[248px_1fr] lg:gap-8">
@@ -455,8 +517,11 @@ function LoungePage() {
               )}
 
               <p className="mt-8 text-center text-[11px] leading-relaxed text-muted-foreground">
-                Visible to event attendees only · emails and phone numbers are never shown ·
-                to remove your card, contact the organisers
+                Visible to event attendees only · emails and phone numbers are never shown · to
+                update or remove your card, contact{" "}
+                <a href="mailto:support@lodestart.ai" className="font-medium text-primary hover:underline">
+                  support@lodestart.ai
+                </a>
               </p>
             </section>
           </div>
