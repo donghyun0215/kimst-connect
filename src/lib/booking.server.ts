@@ -288,6 +288,8 @@ export interface RsvpInput {
   primaryInterest: string;
   notes?: string;
   additionalAttendees?: string;
+  contactUrl?: string;
+  showInLounge?: boolean;
   attendShowcase: boolean;
   attendLunch: boolean;
   attendMeetups: boolean;
@@ -322,6 +324,8 @@ export const createRsvp = createServerFn({ method: "POST" })
         primary_interest: data.primaryInterest,
         notes: data.notes ?? null,
         additional_attendees: data.additionalAttendees?.trim() || null,
+        contact_url: data.contactUrl?.trim() || null,
+        show_in_lounge: data.showInLounge ?? true,
         attend_showcase: data.attendShowcase,
         attend_lunch: data.attendLunch,
         attend_meetups: data.attendMeetups,
@@ -431,4 +435,73 @@ export const lookupRsvpByEmail = createServerFn({ method: "POST" })
       return null;
     }
     return row;
+  });
+
+// ── Virtual Networking Lounge ──────────────────────────────────────
+// Soft-gated attendee wall. Never returns email/phone — a gate bypass can
+// only see what a name badge already shows.
+
+const LOUNGE_ACCESS_KEY = process.env.LOUNGE_ACCESS_KEY; // no fallback on purpose
+
+export interface LoungeProfile {
+  id: string;
+  full_name: string;
+  organisation: string;
+  job_title: string;
+  primary_interest: string | null;
+  contact_url: string | null;
+}
+
+export const listLoungeProfiles = createServerFn({ method: "POST" })
+  .validator((data: { key?: string; email?: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: true; profiles: LoungeProfile[] } | { ok: false }> => {
+    let authorised = false;
+    if (data.key && LOUNGE_ACCESS_KEY && data.key === LOUNGE_ACCESS_KEY) {
+      authorised = true;
+    } else if (data.email) {
+      const email = data.email.toLowerCase().trim();
+      const { data: row } = await supabaseAdmin
+        .from("rsvps")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+      authorised = Boolean(row);
+    }
+    if (!authorised) return { ok: false };
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("rsvps")
+      .select("id, full_name, organisation, job_title, primary_interest, contact_url")
+      .eq("show_in_lounge", true)
+      .order("full_name", { ascending: true });
+    if (error) {
+      console.error("listLoungeProfiles error:", error);
+      return { ok: false };
+    }
+    return { ok: true, profiles: rows ?? [] };
+  });
+
+// Update just the contact link for an existing RSVP — the low-friction path
+// so attendees (or the organiser, on their behalf) never re-submit the form.
+export const updateContactUrl = createServerFn({ method: "POST" })
+  .validator((data: { email: string; contactUrl: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean; message?: string }> => {
+    const email = data.email?.toLowerCase().trim();
+    if (!email) return { ok: false, message: "Email is required." };
+    let url = data.contactUrl?.trim() ?? "";
+    if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`;
+
+    const { data: updated, error } = await supabaseAdmin
+      .from("rsvps")
+      .update({ contact_url: url || null, updated_at: new Date().toISOString() })
+      .eq("email", email)
+      .select("id");
+    if (error) {
+      console.error("updateContactUrl error:", error);
+      return { ok: false, message: "Something went wrong. Please try again." };
+    }
+    if (!updated?.length) {
+      return { ok: false, message: "No RSVP found with this email. Please RSVP first." };
+    }
+    return { ok: true };
   });
