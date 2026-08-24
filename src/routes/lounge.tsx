@@ -259,7 +259,10 @@ function LoungePage() {
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
                     K-Marine Tech Open Innovation Day
                   </div>
-                  <h1 className="mt-3 font-display text-[30px] font-extrabold leading-[1.08] tracking-[-0.02em] text-navy sm:text-[38px]">
+                  <h1
+                    className="mt-3 text-[28px] font-extrabold leading-[1.1] tracking-tight text-navy sm:text-[36px]"
+                    style={{ fontFamily: 'Arial, "Helvetica Neue", Helvetica, sans-serif' }}
+                  >
                     Welcome To The
                     <br />
                     Virtual Networking Lounge
