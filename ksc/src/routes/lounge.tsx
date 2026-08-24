@@ -106,33 +106,33 @@ function MarineWatermark() {
 
 function LoungeNotice() {
   return (
-    <section className="mt-6 rounded-2xl border border-border/70 bg-card/60 p-5">
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-navy">
+    <section className="mt-6 rounded-2xl border border-border/60 bg-card/50 px-4 py-3.5">
+      <h2 className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         Networking Lounge notice
       </h2>
-      <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">
+      <p className="mt-2 text-[9.5px] leading-[1.6] text-muted-foreground/85">
         To facilitate professional networking during K-Marine Tech Open Innovation Day, this
         directory displays the name, organisation, designation and primary business interests of
         registered attendees.
       </p>
-      <dl className="mt-3 space-y-2.5 text-[11px] leading-relaxed">
+      <dl className="mt-2 space-y-1.5 text-[9.5px] leading-[1.6]">
         <div>
-          <dt className="inline font-semibold text-navy">Exclusive access. </dt>
-          <dd className="inline text-muted-foreground">
+          <dt className="inline font-semibold text-navy/70">Exclusive access. </dt>
+          <dd className="inline text-muted-foreground/85">
             This directory is strictly private and accessible only to verified attendees present at
             the event.
           </dd>
         </div>
         <div>
-          <dt className="inline font-semibold text-navy">No direct contact info. </dt>
-          <dd className="inline text-muted-foreground">
+          <dt className="inline font-semibold text-navy/70">No direct contact info. </dt>
+          <dd className="inline text-muted-foreground/85">
             Personal contact information such as email addresses and phone numbers is not displayed
             or shared.
           </dd>
         </div>
         <div>
-          <dt className="inline font-semibold text-navy">Data management. </dt>
-          <dd className="inline text-muted-foreground">
+          <dt className="inline font-semibold text-navy/70">Data management. </dt>
+          <dd className="inline text-muted-foreground/85">
             To update your details or opt out of being listed, use “Add or update my link” inside
             the lounge, or contact the organising team at{" "}
             <a href="mailto:support@lodestart.ai" className="font-medium text-primary hover:underline">
@@ -259,7 +259,7 @@ function LoungePage() {
                   <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
                     K-Marine Tech Open Innovation Day
                   </div>
-                  <h1 className="mt-3 font-display text-[26px] font-bold uppercase leading-[1.15] tracking-tight text-navy sm:text-3xl">
+                  <h1 className="mt-3 font-display text-[30px] font-extrabold uppercase leading-[1.08] tracking-[-0.02em] text-navy sm:text-[38px]">
                     Welcome to the
                     <br />
                     Virtual Networking Lounge

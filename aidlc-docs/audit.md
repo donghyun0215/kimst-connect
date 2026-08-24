@@ -164,3 +164,17 @@ sketched the screen as a single welcome headline with a short button.
 
 Verified: tsc ✓ build ✓; entry screen renders the title once, header duplicate
 absent, notice intact.
+
+---
+
+## 2026-08-24 — Entry screen type hierarchy (client follow-up)
+
+**From Tammy:** headline should be bold and large; the disclaimer can be much
+smaller ("금융권들은 disclaimer 개미만한 글씨로").
+
+- Headline: 30px on phones / 38px from `sm`, extrabold, tightened tracking and
+  leading so the two lines lock together.
+- Notice: dropped to 9.5px at 85% muted with a 9px eyebrow, tighter row spacing
+  and padding — legal fine print, present but out of the way.
+
+Verified: tsc ✓ build ✓.
