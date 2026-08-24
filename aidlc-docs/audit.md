@@ -47,3 +47,28 @@ plus one column known to have been applied by hand.
 
 **Status:** ⏸ Awaiting review. No Inception or Construction work begins until
 the approver signs off on these models.
+
+---
+
+## 2026-08-23 — Networking Lounge: Inception approved, Construction staged
+
+**Approved with amendments** (recorded in `inception/networking-lounge/plan.md`):
+contact_url replaces linkedin_url; lounge-gate mini-form for low-friction
+updates (doubles as organiser backfill); default visibility ON; guests excluded.
+
+**Built on branch `feat/networking-lounge`** (not merged — C4 gate):
+- U1: `supabase/schema.sql` gains `additional_attendees` (drift repair, R3),
+  `contact_url`, `show_in_lounge` — committed to main; ALTERs pending in prod.
+- U2: `/book` captures contact link + lounge opt-out; `createRsvp` passes both.
+- U3: `listLoungeProfiles` (key OR rsvp-email auth; returns name/org/title/
+  interest/contact only — never email/phone), `updateContactUrl`.
+  `LOUNGE_ACCESS_KEY` from env with **no fallback**.
+- U4: unlisted `/lounge` — gate screen, card wall (initials avatar, interest
+  chip, contact button), mini-form. noindex, zero nav links.
+
+Verified: vite build ✓, tsc ✓, gate renders ✓, /book field ✓, landing has no
+/lounge reference ✓.
+
+**Merge gate:** branch merges to main only after the owner confirms the two
+ALTER statements ran in production. U5 (QR asset, reminder copy) follows the
+merge.

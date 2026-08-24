@@ -114,3 +114,12 @@ end $$;
 -- ── verification queries (optional) ─────────────────────────────
 -- select * from public.bookings order by created_at desc;
 -- select * from public.booking_events order by created_at desc;
+
+-- ── networking lounge (2026-08) ─────────────────────────────────
+-- additional_attendees repairs earlier drift: the column was added by hand in
+-- production (Aug 2026) but never recorded here. contact_url holds any
+-- professional link (LinkedIn / website / open-chat) shown on the attendee's
+-- lounge card; show_in_lounge lets an attendee opt out of the wall.
+alter table public.rsvps add column if not exists additional_attendees text;
+alter table public.rsvps add column if not exists contact_url text;
+alter table public.rsvps add column if not exists show_in_lounge boolean not null default true;

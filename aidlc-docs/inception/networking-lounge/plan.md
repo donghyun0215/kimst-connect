@@ -1,6 +1,11 @@
 # Virtual Networking Lounge — Construction Plan
 
-- **Status:** Awaiting approval — no code until sign-off
+- **Status:** Approved 2026-08-23 with amendments:
+  - `linkedin_url` → **`contact_url`** (any professional link — LinkedIn,
+    company site, or KakaoTalk open chat — covers attendees without LinkedIn)
+  - Add a **mini update form** on the lounge gate (email + URL only) so nobody
+    has to re-submit the whole RSVP; doubles as the organiser's backfill tool
+  - `show_in_lounge` default **ON** confirmed; guests excluded confirmed
 - **Depends on:** requirements.md in this folder
 
 ## Units of work (in order)
@@ -12,7 +17,7 @@
 3. Only then does any dependent code deploy. Gate: **hard stop** until confirmed.
 
 ### U2 — RSVP form capture
-`/book`: add optional "LinkedIn profile URL" input and a "Show my card in the
+`/book`: add optional "LinkedIn or contact link" input and a "Show my card in the
 attendee networking lounge" checkbox (default checked) near the companions
 field. `createRsvp` passes both through. Backward compatible — U1 already live.
 
@@ -21,7 +26,7 @@ New server fn `listLoungeProfiles({ key? , email? })`:
 - Authorise if `key === LOUNGE_ACCESS_KEY` (env, no hardcoded fallback — avoid
   repeating R1) **or** the email matches an existing RSVP row.
 - Return only: full_name, organisation, job_title, primary_interest,
-  linkedin_url — filtered to `show_in_lounge = true`. Never email/phone.
+  contact_url — filtered to `show_in_lounge = true`. Never email/phone.
 
 ### U4 — `/lounge` page
 Unlisted route (noindex, no nav links — same posture as `/schedule`).
