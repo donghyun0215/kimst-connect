@@ -57,6 +57,7 @@ function LoungePage() {
   const [grantedEmail, setGrantedEmail] = useState<string | null>(null);
 
   // contact mini-form
+  const [selected, setSelected] = useState<LoungeProfile | null>(null);
   const [showContactForm, setShowContactForm] = useState(false);
   const [cEmail, setCEmail] = useState("");
   const [cUrl, setCUrl] = useState("");
@@ -201,7 +202,12 @@ function LoungePage() {
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {profiles.map((p) => (
-                <div key={p.id} className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setSelected(p)}
+                  className="flex flex-col rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+                >
                   <div className="flex items-center gap-3">
                     <div
                       className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
@@ -233,6 +239,7 @@ function LoungePage() {
                         href={p.contact_url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-1.5 text-[11px] font-semibold text-white transition hover:bg-navy/85"
                       >
                         <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -243,7 +250,7 @@ function LoungePage() {
                       </a>
                     )}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 
@@ -252,6 +259,79 @@ function LoungePage() {
               to remove your card, contact the organisers
             </p>
           </>
+        )}
+
+        {selected && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm"
+            onClick={() => setSelected(null)}
+          >
+            <div
+              className="w-full max-w-md overflow-hidden rounded-2xl bg-card shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative bg-secondary/60 px-6 pb-6 pt-8 text-center">
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  aria-label="Close"
+                  className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground transition hover:bg-background hover:text-navy"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+                <div
+                  className="mx-auto flex h-20 w-20 items-center justify-center rounded-full text-xl font-bold text-white"
+                  style={{ backgroundColor: `hsl(${avatarHue(selected.full_name)} 55% 45%)` }}
+                >
+                  {initials(selected.full_name)}
+                </div>
+                <div className="mt-3 text-lg font-bold text-navy">{selected.full_name}</div>
+                {selected.primary_interest && (
+                  <span
+                    className={`mt-2 inline-block rounded-full px-3 py-1 text-[11px] font-semibold ${
+                      CHIP_COLORS[selected.primary_interest] ?? "bg-background text-navy"
+                    }`}
+                  >
+                    {selected.primary_interest}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-3 px-6 py-5">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Organisation
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold text-navy">{selected.organisation}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Role
+                  </div>
+                  <div className="mt-0.5 text-sm text-navy/90">{selected.job_title}</div>
+                </div>
+                {selected.contact_url ? (
+                  <a
+                    href={selected.contact_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-navy py-2.5 text-sm font-semibold text-white transition hover:bg-navy/85"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
+                      <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+                    </svg>
+                    Connect on {contactLabel(selected.contact_url)}
+                  </a>
+                ) : (
+                  <p className="mt-2 rounded-lg bg-secondary/60 px-3 py-2 text-center text-xs text-muted-foreground">
+                    No contact link added yet
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         <footer className="mt-10 text-center text-xs text-muted-foreground">
