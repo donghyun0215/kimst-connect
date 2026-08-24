@@ -97,3 +97,32 @@ scope limit reaffirmed.
 
 Verified: tsc ✓ build ✓; generator smoke-tested against three attendee shapes
 (full / RSVP-only / Nuldam-only) with real slot ids.
+
+---
+
+## 2026-08-24 — Lounge UI pass (wide layout + directory controls)
+
+**Problem:** on desktop the wall sat in a 1024px column with dead margins both
+sides, and cards read as sparse.
+
+**Approach:** the empty space was spent on function, not decoration. Container
+widened to `max-w-7xl` with a two-column shell at `lg` — a sticky left rail
+plus a 1/2/3-column card grid.
+
+- **Rail:** search across name/company/role; a "Who's here" composition list
+  (interest categories with counts and proportional bars) where each row is
+  also the filter; "has a contact link" toggle; the add/update-link form moved
+  here from the header. On phones the rail degrades to a search field plus a
+  horizontally scrolling chip row.
+- **Cards:** role and organisation split onto separate lines (org in a distinct
+  weight), avatars re-keyed to a cool marine palette so 57 tiles read as one
+  wall rather than a rainbow, interest chips gain ring outlines, hover lift and
+  visible focus ring retained.
+- **Fixed:** `CHIP_COLORS` keys never matched the real `primary_interest`
+  values from the RSVP form, so every chip except Investment fell through to
+  the default grey. Now keyed to the four actual options.
+- **Empty state:** filters that match nobody get a direction and a clear action
+  rather than a blank grid.
+
+Verified: tsc ✓ build ✓ dev-server render ✓ (no visual regression testing
+available in this environment — owner to eyeball).
