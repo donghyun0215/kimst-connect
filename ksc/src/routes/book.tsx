@@ -54,6 +54,8 @@ interface FormState {
   primaryInterest: string;
   notes: string;
   additionalAttendees: string;
+  contactUrl: string;
+  showInLounge: boolean;
 }
 
 const emptyForm: FormState = {
@@ -65,6 +67,8 @@ const emptyForm: FormState = {
   primaryInterest: "",
   notes: "",
   additionalAttendees: "",
+  contactUrl: "",
+  showInLounge: true,
 };
 
 function RsvpPage() {
@@ -222,6 +226,8 @@ function RsvpPage() {
       primaryInterest: form.primaryInterest,
       notes: form.notes.trim() || undefined,
       additionalAttendees: attend.meetups ? form.additionalAttendees.trim() || undefined : undefined,
+      contactUrl: form.contactUrl.trim() || undefined,
+      showInLounge: form.showInLounge,
       attendShowcase: attend.showcase,
       attendLunch: attend.lunch,
       attendMeetups: attend.meetups,
@@ -593,6 +599,30 @@ function RsvpPage() {
                 </div>
               </div>
             )}
+            <div className="mt-4">
+              <label className="text-xs font-semibold text-navy">
+                LinkedIn or contact link{" "}
+                <span className="font-normal text-muted-foreground">(optional — shown on your card in the attendee networking lounge)</span>
+              </label>
+              <input
+                value={form.contactUrl}
+                onChange={(e) => setForm({ ...form, contactUrl: e.target.value })}
+                placeholder="e.g. linkedin.com/in/yourname or your company site"
+                className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
+              />
+              <label className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={form.showInLounge}
+                  onChange={(e) => setForm({ ...form, showInLounge: e.target.checked })}
+                  className="mt-0.5"
+                />
+                <span>
+                  Show my card (name, organisation, job title) in the attendee networking lounge —
+                  visible to fellow attendees only. Email and phone are never shown.
+                </span>
+              </label>
+            </div>
             <div className="mt-4">
               <label className="text-xs font-semibold text-navy">
                 Any notes or questions? <span className="font-normal text-muted-foreground">(optional)</span>
