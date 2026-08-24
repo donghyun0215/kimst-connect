@@ -101,20 +101,20 @@ function LoungePage() {
   };
 
   return (
-    <div className="min-h-screen bg-secondary/40">
+    <div className="min-h-screen w-full overflow-x-hidden bg-secondary/40">
       <header className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
-          <img src={kimstLogo} alt="KIMST" className="h-10 w-auto object-contain sm:h-12" />
-          <div className="text-right">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-5">
+          <img src={kimstLogo} alt="KIMST" className="h-9 w-auto shrink-0 object-contain sm:h-12" />
+          <div className="min-w-0 text-right">
+            <div className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-primary sm:text-[10px] sm:tracking-[0.2em]">
               K-Marine Tech Open Innovation Day
             </div>
-            <div className="text-sm font-bold text-navy">Virtual Networking Lounge</div>
+            <div className="truncate text-[13px] font-bold text-navy sm:text-sm">Virtual Networking Lounge</div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 pb-16 pt-8">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-6 sm:px-5 sm:pt-8">
         {!profiles ? (
           <div className="mx-auto max-w-md">
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -129,7 +129,7 @@ function LoungePage() {
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && email.trim() && void load({ email: email.trim() })}
                 placeholder="you@company.com"
-                className="mt-4 w-full rounded-lg border border-input px-3 py-2 text-sm"
+                className="mt-4 w-full rounded-lg border border-input px-3 py-2.5 text-base sm:text-sm"
               />
               {gateError && <p className="mt-2 text-xs text-red-600">{gateError}</p>}
               <button
@@ -148,7 +148,7 @@ function LoungePage() {
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h1 className="font-display text-2xl font-bold text-navy">Attendees</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -161,7 +161,7 @@ function LoungePage() {
                   setShowContactForm((v) => !v);
                   if (grantedEmail && !cEmail) setCEmail(grantedEmail);
                 }}
-                className="rounded-full border border-primary/40 px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
+                className="w-full rounded-full border border-primary/40 px-4 py-2.5 text-xs font-semibold text-primary transition hover:bg-primary/10 sm:w-auto sm:py-2"
               >
                 {showContactForm ? "Close" : "Add / update my contact link"}
               </button>
@@ -175,13 +175,13 @@ function LoungePage() {
                     value={cEmail}
                     onChange={(e) => setCEmail(e.target.value)}
                     placeholder="Email you RSVP'd with"
-                    className="w-full rounded-lg border border-input px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-input px-3 py-2.5 text-base sm:text-sm"
                   />
                   <input
                     value={cUrl}
                     onChange={(e) => setCUrl(e.target.value)}
                     placeholder="linkedin.com/in/yourname · company site · open chat"
-                    className="w-full rounded-lg border border-input px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-input px-3 py-2.5 text-base sm:text-sm"
                   />
                 </div>
                 <div className="mt-3 flex items-center gap-3">
@@ -200,7 +200,7 @@ function LoungePage() {
               </div>
             )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {profiles.map((p) => (
                 <button
                   key={p.id}
@@ -215,9 +215,9 @@ function LoungePage() {
                     >
                       {initials(p.full_name)}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-bold text-navy">{p.full_name}</div>
-                      <div className="truncate text-xs text-muted-foreground">
+                      <div className="line-clamp-2 break-words text-xs leading-snug text-muted-foreground">
                         {p.job_title} @ {p.organisation}
                       </div>
                     </div>
@@ -263,11 +263,11 @@ function LoungePage() {
 
         {selected && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
             onClick={() => setSelected(null)}
           >
             <div
-              className="w-full max-w-md overflow-hidden rounded-2xl bg-card shadow-xl"
+              className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card shadow-xl sm:rounded-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative bg-secondary/60 px-6 pb-6 pt-8 text-center">
@@ -303,13 +303,13 @@ function LoungePage() {
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Organisation
                   </div>
-                  <div className="mt-0.5 text-sm font-semibold text-navy">{selected.organisation}</div>
+                  <div className="mt-0.5 break-words text-sm font-semibold text-navy">{selected.organisation}</div>
                 </div>
                 <div>
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Role
                   </div>
-                  <div className="mt-0.5 text-sm text-navy/90">{selected.job_title}</div>
+                  <div className="mt-0.5 break-words text-sm text-navy/90">{selected.job_title}</div>
                 </div>
                 {selected.contact_url ? (
                   <a

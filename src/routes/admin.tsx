@@ -4,6 +4,7 @@ import { companies } from "@/data/companies";
 import { EVENT_DATE, TIMESLOTS, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_COMPANY_SLUGS, getSlotInfo, isSlotOffered } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
+import { buildReminders, remindersToCsv } from "@/lib/reminders";
 import kimstLogo from "@/assets/kimst-logo.png";
 
 export const Route = createFileRoute("/admin")({
@@ -213,6 +214,9 @@ function AdminPage() {
           <Stat label="Event 1:1 filled" value={`${bookings.filter((b) => b.timeslot_id.startsWith("slot")).length} / ${totalSlots}`} />
           <Stat label="Nuldam 1:1 booked" value={`${bookings.filter((b) => b.timeslot_id.startsWith("n")).length}`} />
         </div>
+
+        {/* REMINDER EMAILS */}
+        <ReminderSection rsvps={rsvps} bookings={bookings} />
 
         {/* RSVP TABLE */}
         <h2 className="mt-10 text-lg font-bold text-navy">RSVPs ({rsvps.length})</h2>
@@ -555,5 +559,89 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="text-2xl font-bold text-navy">{value}</div>
       <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
+  );
+}
+
+
+// ── Reminder emails: one personalised draft per RSVP ─────────────────
+function ReminderSection({ rsvps, bookings }: { rsvps: AdminRsvp[]; bookings: AdminBooking[] }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const reminders = useMemo(() => buildReminders(rsvps, bookings), [rsvps, bookings]);
+
+  const copy = async (key: string, text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500);
+  };
+
+  const downloadCsv = () => {
+    const blob = new Blob(["\ufeff" + remindersToCsv(reminders)], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `kimst-reminders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  return (
+    <section className="mt-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-bold text-navy">Reminder Emails ({reminders.length})</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={downloadCsv}
+            className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Download CSV (mail merge)
+          </button>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-navy hover:bg-muted"
+          >
+            {open ? "Hide drafts" : "Show drafts"}
+          </button>
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        One personalised draft per RSVP — schedule reflects their showcase/lunch choices and booked 1:1
+        meetings. CSV columns: email, name, subject, body (import into a Gmail mail-merge sheet).
+      </p>
+      {open && (
+        <div className="mt-4 space-y-3">
+          {reminders.map((r) => (
+            <details key={r.email} className="rounded-xl border border-border bg-card shadow-sm">
+              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
+                <span className="font-semibold text-navy">
+                  {r.name} <span className="font-normal text-muted-foreground">· {r.email}</span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">{r.tags.join(" · ")}</span>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void copy(r.email, `Subject: ${r.subject}\n\n${r.body}`);
+                    }}
+                    className="rounded-full border border-border px-3 py-1 text-[11px] font-semibold text-navy hover:bg-muted"
+                  >
+                    {copied === r.email ? "Copied ✓" : "Copy"}
+                  </button>
+                  <a
+                    href={`mailto:${encodeURIComponent(r.email)}?subject=${encodeURIComponent(r.subject)}&body=${encodeURIComponent(r.body)}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="rounded-full bg-navy px-3 py-1 text-[11px] font-semibold text-white hover:bg-navy/85"
+                  >
+                    Open in mail
+                  </a>
+                </span>
+              </summary>
+              <pre className="overflow-x-auto whitespace-pre-wrap border-t border-border px-4 py-3 text-xs leading-relaxed text-navy/90">
+{r.body}
+              </pre>
+            </details>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

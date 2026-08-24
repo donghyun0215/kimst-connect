@@ -72,3 +72,28 @@ Verified: vite build ✓, tsc ✓, gate renders ✓, /book field ✓, landing ha
 **Merge gate:** branch merges to main only after the owner confirms the two
 ALTER statements ran in production. U5 (QR asset, reminder copy) follows the
 merge.
+
+---
+
+## 2026-08-24 — Lounge mobile fix + Reminder email generator
+
+**Mobile (reported via KakaoTalk in-app browser screenshots):** page rendered
+zoomed-out/desktop-width. Hardened `/lounge` mobile-first: `overflow-x-hidden`
+root guard (prevents webview fit-zoom from any overflowing child), header
+compaction with truncation, card role/org now wraps two lines (line-clamp)
+instead of clipping, detail modal becomes a bottom sheet on phones
+(`items-end`, `max-h-[88dvh]`, scrollable), 16px inputs (kills iOS focus-zoom),
+full-width tap targets.
+
+**Reminders (small-cycle feature, owner-approved option 1):** new
+`src/lib/reminders.ts` — joins RSVPs with bookings by email and renders one
+personalised plain-text email per attendee: showcase/lunch blocks from PROGRAM,
+2-Sep 1:1 meetings with company + round + time, Nuldam meetings under "Also on
+your calendar", companion badge line, lounge/LinkedIn plug, change-booking
+link; "slots still open" nudge when no day meeting. Admin gains a "Reminder
+Emails" section: per-person Copy / mailto, CSV download (email,name,subject,
+body) for Gmail mail merge. English only per owner. No sending from the app —
+scope limit reaffirmed.
+
+Verified: tsc ✓ build ✓; generator smoke-tested against three attendee shapes
+(full / RSVP-only / Nuldam-only) with real slot ids.
