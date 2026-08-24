@@ -211,3 +211,24 @@ rounds (13:00–13:30, 13:30–14:00) for all companies — five slots per compa
 
 Verified: tsc ✓ build ✓; TIMESLOTS order/labels and slot4 SlotInfo checked via
 tsx; hero, gate, notice, footer, QR path and index nav link render ✓.
+
+---
+
+## 2026-08-24 — Lounge hero: use the mock's artwork verbatim
+
+**Feedback:** the redesign approximated the reference; the client wants the
+graphics duplicated exactly, especially the illustration.
+
+The reference mock is the client's own generated asset, so the illustration
+(arch + networking figures) and the footer skyline were **cropped straight out
+of the mock** into `src/assets/lounge-hero-illustration.png` and
+`lounge-footer-art.png`. The mock's hero background is flat `#002a75`
+(sampled), so the hero switched from a gradient to that flat fill — crops
+composite seamlessly with no feathering. Headline text now matches the mock
+("Welcome to / Virtual Networking Lounge"), the notice title renders the
+literal "<Networking Lounge Notice>", the notice card gained the mock's corner
+shapes (soft circle, hatched circle, dot grid), and the footer gained the
+skyline art plus the three social icon roundels (decorative, non-linking — no
+real accounts exist to link).
+
+Verified: tsc ✓ build ✓.

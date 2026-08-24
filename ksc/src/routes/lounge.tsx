@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import kimstLogo from "@/assets/kimst-logo.png";
+import loungeHeroArt from "@/assets/lounge-hero-illustration.png";
+import loungeFooterArt from "@/assets/lounge-footer-art.png";
 import {
   listLoungeProfiles,
   updateContactUrl,
@@ -232,7 +234,7 @@ function LoungePage() {
         {!profiles ? (
           <>
             {/* ── HERO ── */}
-            <section className="relative -mx-4 -mt-6 overflow-hidden bg-gradient-to-br from-navy via-[#0d3fa8] to-primary px-4 pb-14 pt-10 sm:-mx-6 sm:-mt-8 sm:px-6 sm:pb-16 sm:pt-12">
+            <section className="relative -mx-4 -mt-6 overflow-hidden bg-[#002a75] px-4 pb-14 pt-10 sm:-mx-6 sm:-mt-8 sm:px-6 sm:pb-16 sm:pt-12">
               {/* decorative field */}
               <div aria-hidden="true" className="pointer-events-none absolute inset-0">
                 <DotGrid className="absolute left-6 top-8 h-20 w-32 text-white/25" />
@@ -251,7 +253,7 @@ function LoungePage() {
                     className="mt-3 text-[32px] font-extrabold leading-[1.12] tracking-tight text-white sm:text-[42px]"
                     style={{ fontFamily: 'Arial, "Helvetica Neue", Helvetica, sans-serif' }}
                   >
-                    Welcome To The
+                    Welcome to
                     <br />
                     Virtual Networking Lounge
                   </h1>
@@ -314,39 +316,39 @@ function LoungePage() {
                   </div>
                 </div>
 
-                {/* arch visual */}
-                <div className="relative mx-auto hidden w-full max-w-[300px] lg:block">
-                  <div className="relative overflow-hidden rounded-t-[150px] rounded-b-3xl border-4 border-white/25 bg-white px-8 pb-10 pt-16 text-center shadow-xl">
-                    <MarineWatermark />
-                    <div className="relative">
-                      <img src={kimstLogo} alt="KIMST" className="mx-auto h-12 w-auto object-contain" />
-                      <div className="mt-2 text-sm font-bold text-navy">Networking Lounge</div>
-                      <div className="mt-3 flex items-center justify-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary/45" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary/25" />
-                      </div>
-                      <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
-                        Name · company · role
-                        <br />
-                        of everyone in the room
-                      </p>
-                    </div>
-                  </div>
-                  <div aria-hidden="true" className="absolute -left-8 bottom-6 h-14 w-14 rounded-full bg-white/10" />
-                  <div aria-hidden="true" className="absolute -right-10 top-10 h-0 w-0 border-b-[22px] border-l-[13px] border-r-[13px] border-b-white/20 border-l-transparent border-r-transparent -rotate-12" />
+                {/* illustration from the approved mock */}
+                <div className="relative mx-auto hidden w-full max-w-[440px] lg:block">
+                  <img
+                    src={loungeHeroArt}
+                    alt=""
+                    aria-hidden="true"
+                    className="w-full select-none"
+                    draggable={false}
+                  />
                 </div>
               </div>
             </section>
 
             {/* ── NOTICE ── */}
             <section className="mx-auto max-w-3xl py-10 sm:py-12">
-              <div className="flex gap-4 rounded-2xl border border-primary/15 bg-card p-5 shadow-sm sm:gap-5 sm:p-6">
-                <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:flex">
+              <div className="relative flex gap-4 overflow-hidden rounded-2xl border border-primary/15 bg-card p-5 shadow-sm sm:gap-5 sm:p-6">
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+                  <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-primary/10" />
+                  <svg className="absolute -bottom-6 -right-4 h-20 w-20 text-primary/25" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <defs>
+                      <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse">
+                        <path d="M0 6L6 0" />
+                      </pattern>
+                    </defs>
+                    <circle cx="40" cy="40" r="38" fill="url(#hatch)" stroke="none" />
+                  </svg>
+                  <DotGrid className="absolute -left-1 bottom-3 h-12 w-20 text-primary/25" />
+                </div>
+                <div className="relative hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:flex">
                   <LockGlyph className="h-5 w-5 text-primary" />
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-sm font-bold text-navy">Networking Lounge Notice</h2>
+                <div className="relative min-w-0">
+                  <h2 className="text-sm font-bold text-navy">{"<Networking Lounge Notice>"}</h2>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     To facilitate professional networking during K-Marine Tech Open Innovation Day,
                     this directory displays the name, organisation, designation and primary business
@@ -384,12 +386,30 @@ function LoungePage() {
             </section>
 
             {/* ── FOOTER ── */}
-            <footer className="-mx-4 -mb-16 bg-navy px-4 py-8 sm:-mx-6 sm:px-6">
-              <div className="mx-auto grid max-w-6xl gap-6 text-sm sm:grid-cols-3">
+            <footer className="relative -mx-4 -mb-16 overflow-hidden bg-[#002a70] px-4 py-8 sm:-mx-6 sm:px-6">
+              <img
+                src={loungeFooterArt}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-0 right-0 h-full w-auto select-none opacity-90"
+                draggable={false}
+              />
+              <div className="relative mx-auto grid max-w-6xl gap-6 text-sm sm:grid-cols-3">
                 <img src={kimstLogo} alt="KIMST" className="h-10 w-auto object-contain brightness-0 invert" />
                 <div>
                   <div className="font-bold text-white">KIMST 2026</div>
                   <div className="mt-1 text-xs text-sky-200/80">K-Marine Tech Open Innovation Day</div>
+                  <div className="mt-3 flex gap-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#002a70]">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.2 8h4.6v14H.2V8zm7.6 0h4.4v1.9h.1c.6-1.1 2.1-2.3 4.3-2.3 4.6 0 5.4 3 5.4 6.9V22h-4.6v-6.6c0-1.6 0-3.6-2.2-3.6s-2.5 1.7-2.5 3.5V22H7.8V8z"/></svg>
+                    </span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#002a70]">
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-6.4L6.4 22H3.3l7.3-8.3L1 2h6.4l4.4 5.9L18.9 2zm-1.1 18h1.7L7.3 3.9H5.5L17.8 20z"/></svg>
+                    </span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#002a70]">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4L15.8 12l-6.2 3.6z"/></svg>
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <div className="font-bold text-white">Contact</div>
