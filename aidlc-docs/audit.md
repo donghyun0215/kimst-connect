@@ -145,3 +145,22 @@ quickly; she asked for a deliberate entry step and a privacy notice beneath it.
 
 Verified: tsc ✓ build ✓; QR path renders the button and does not enter on load;
 notice present on both paths.
+
+---
+
+## 2026-08-24 — Entry screen wording (client markup)
+
+**From Tammy:** "Virtual Networking Lounge" appeared three times on one screen
+(header, card title, button). She marked up the header for deletion and
+sketched the screen as a single welcome headline with a short button.
+
+- Header title block now renders only once inside the lounge; on the entry
+  screens the card carries the name, so the header is logo-only.
+- Welcome card headline: "Welcome to the Virtual Networking Lounge"
+  (uppercase display, two lines); button shortened to "Enter the lounge".
+- Both entry cards gained a faint marine glyph watermark (waves, hull, buoy,
+  rotor) at ~4.5% opacity, per her mock — subject vocabulary, quiet enough that
+  the headline stays dominant.
+
+Verified: tsc ✓ build ✓; entry screen renders the title once, header duplicate
+absent, notice intact.

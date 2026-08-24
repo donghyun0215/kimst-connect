@@ -70,6 +70,40 @@ function LinkIcon({ className }: { className?: string }) {
   );
 }
 
+// Faint marine glyphs — the subject's own vocabulary, kept quiet enough that
+// the type stays the loudest thing on the screen.
+function MarineWatermark() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 h-full w-full text-navy opacity-[0.045]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <defs>
+        <pattern id="marine" width="112" height="112" patternUnits="userSpaceOnUse">
+          {/* waves */}
+          <path d="M8 22c6-6 12-6 18 0s12 6 18 0" />
+          <path d="M8 30c6-6 12-6 18 0s12 6 18 0" />
+          {/* hull */}
+          <path d="M70 34h26l-5 9H75z" />
+          <path d="M83 34V20l12 6-12 4" />
+          {/* buoy / sensor */}
+          <circle cx="24" cy="80" r="9" />
+          <path d="M24 71v-8M24 89v8" />
+          {/* propeller-ish rotor */}
+          <path d="M84 78l10-6M84 78l10 6M84 78l-11 0" />
+          <circle cx="84" cy="78" r="3" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#marine)" />
+    </svg>
+  );
+}
+
 function LoungeNotice() {
   return (
     <section className="mt-6 rounded-2xl border border-border/70 bg-card/60 p-5">
@@ -203,12 +237,14 @@ function LoungePage() {
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <img src={kimstLogo} alt="KIMST" className="h-9 w-auto shrink-0 object-contain sm:h-11" />
-          <div className="min-w-0 text-right">
-            <div className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-primary sm:text-[10px] sm:tracking-[0.2em]">
-              K-Marine Tech Open Innovation Day
+          {profiles && (
+            <div className="min-w-0 text-right">
+              <div className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-primary sm:text-[10px] sm:tracking-[0.2em]">
+                K-Marine Tech Open Innovation Day
+              </div>
+              <div className="truncate text-[13px] font-bold text-navy sm:text-sm">Virtual Networking Lounge</div>
             </div>
-            <div className="truncate text-[13px] font-bold text-navy sm:text-sm">Virtual Networking Lounge</div>
-          </div>
+          )}
         </div>
       </header>
 
@@ -217,28 +253,35 @@ function LoungePage() {
           <div className="mx-auto max-w-md">
             {key && !gateError ? (
               /* QR arrival — welcome, then enter on tap */
-              <div className="rounded-2xl border border-border bg-card p-7 text-center shadow-sm">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                  K-Marine Tech Open Innovation Day
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-7 text-center shadow-sm">
+                <MarineWatermark />
+                <div className="relative">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                    K-Marine Tech Open Innovation Day
+                  </div>
+                  <h1 className="mt-3 font-display text-[26px] font-bold uppercase leading-[1.15] tracking-tight text-navy sm:text-3xl">
+                    Welcome to the
+                    <br />
+                    Virtual Networking Lounge
+                  </h1>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    See who else is in the room today — name, company and role — and keep the
+                    conversations going after the event.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void load({ key })}
+                    className="mt-6 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {loading ? "Opening…" : "Enter the lounge"}
+                  </button>
                 </div>
-                <h1 className="mt-2 font-display text-2xl font-bold leading-tight text-navy">
-                  Virtual Networking Lounge
-                </h1>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  See who else is in the room today — name, company and role — and keep the
-                  conversations going after the event.
-                </p>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => void load({ key })}
-                  className="mt-6 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {loading ? "Opening…" : "Enter Virtual Networking Lounge"}
-                </button>
               </div>
             ) : (
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm">
+                <MarineWatermark />
+                <div className="relative">
                 <h1 className="font-display text-xl font-bold text-navy">Attendees only</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Enter the email you used to RSVP to browse everyone joining on 2 September and keep
@@ -261,6 +304,7 @@ function LoungePage() {
                 >
                   {loading ? "Checking…" : "Enter the lounge"}
                 </button>
+                </div>
               </div>
             )}
 
