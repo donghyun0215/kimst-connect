@@ -141,6 +141,7 @@ function Landing() {
               <a href="#rsvp" className="rounded-full bg-primary px-2.5 py-1.5 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2">RSVP</a>
               <a href="#startups" className="rounded-full bg-primary px-2.5 py-1.5 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2">Startups</a>
               <a href="#about" className="rounded-full bg-primary px-2.5 py-1.5 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2">About</a>
+              <a href="/lounge" className="rounded-full bg-primary px-2.5 py-1.5 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2">Lounge</a>
             </nav>
             <ContactOrganizer />
           </div>

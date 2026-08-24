@@ -13,10 +13,15 @@ export const EVENT_MAP_URL =
   "https://www.google.com/maps/search/?api=1&query=Suntec+Singapore+Convention+%26+Exhibition+Centre+1+Raffles+Boulevard+Singapore+039593";
 
 // 1:1 meetup rounds ("Session" is reserved for the program blocks below)
+// IDs are stable references stored in bookings — never renumber them.
+// Labels follow the clock: slot4/slot5 were added later (28 Aug) when demand
+// filled the original three rounds, so chronological order is 4,5,1,2,3.
 export const TIMESLOTS: Timeslot[] = [
-  { id: "slot1", label: "Round 1", time: "14:00 – 14:30" },
-  { id: "slot2", label: "Round 2", time: "14:50 – 15:20" },
-  { id: "slot3", label: "Round 3", time: "15:30 – 16:00" },
+  { id: "slot4", label: "Round 1", time: "13:00 – 13:30" },
+  { id: "slot5", label: "Round 2", time: "13:30 – 14:00" },
+  { id: "slot1", label: "Round 3", time: "14:00 – 14:30" },
+  { id: "slot2", label: "Round 4", time: "14:50 – 15:20" },
+  { id: "slot3", label: "Round 5", time: "15:30 – 16:00" },
 ];
 
 // Round 3 opened to all companies (organiser request, 20 Aug) — extra investor
@@ -59,8 +64,8 @@ export const PROGRAM: ProgramBlock[] = [
   {
     id: "meetups",
     title: "1:1 Onsite Meetups",
-    time: "14:00 – 15:20",
-    description: "Private 30-minute meetings with the startups of your choice — two rounds, one company each.",
+    time: "13:00 – 16:00",
+    description: "Private 30-minute meetings with the startups of your choice — five rounds, one company each.",
   },
 ];
 

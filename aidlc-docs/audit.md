@@ -178,3 +178,36 @@ smaller ("금융권들은 disclaimer 개미만한 글씨로").
   and padding — legal fine print, present but out of the way.
 
 Verified: tsc ✓ build ✓.
+
+---
+
+## 2026-08-24 — Lounge hero redesign, navbar links, two new 1:1 rounds
+
+**From Tammy (reference mock):** redesign the lounge entry in the illustrated
+hero style; email-gated with an RSVP prompt when the email is unknown; add a
+Networking Lounge item to the main site nav; and open two additional 1:1
+rounds (13:00–13:30, 13:30–14:00) for all companies — five slots per company.
+
+- **Rounds:** `slot4`/`slot5` added to TIMESLOTS in chronological order; labels
+  renumbered by the clock (slot4=R1, slot5=R2, slot1=R3, slot2=R4, slot3=R5).
+  IDs of existing bookings untouched. **No DB change needed** — timeslot ids
+  are free text under the existing unique constraints (C4 satisfied trivially).
+  `/book` selection state now derives from TIMESLOTS instead of a hardcoded
+  three-key object; admin grid, capacity math and reminder emails adapt via
+  existing dynamic rendering. PROGRAM meetups block now reads 13:00–16:00 /
+  five rounds.
+- **Entry redesign:** full-bleed navy→primary hero with decorative dot grids /
+  circles / triangle, white Arial-bold two-line headline, ecosystem tagline,
+  and an inline email gate card ("Enter lounge →", lock note). Unknown email
+  now answers with "please RSVP first" plus a direct /book link. QR arrivals
+  get a "verified via the event QR" card with a single enter button. Reference
+  illustration was approximated with an arch card (KIMST mark + marine
+  watermark) rather than stock people art. Notice restyled as the mock's
+  lock-icon card; navy footer (KIMST 2026 / contact) added to the gate layout.
+- **Nav:** "Lounge" link added on index, /book and /meet headers (company
+  pages left uncluttered — their nav is CTA-focused). The lounge is thereby no
+  longer unlisted by obscurity; the email/QR gate is now the sole control,
+  which the client explicitly chose.
+
+Verified: tsc ✓ build ✓; TIMESLOTS order/labels and slot4 SlotInfo checked via
+tsx; hero, gate, notice, footer, QR path and index nav link render ✓.

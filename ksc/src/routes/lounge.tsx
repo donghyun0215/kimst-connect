@@ -70,6 +70,28 @@ function LinkIcon({ className }: { className?: string }) {
   );
 }
 
+function LockGlyph({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+function DotGrid({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" className={className} fill="currentColor">
+      <defs>
+        <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="1.6" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#dots)" />
+    </svg>
+  );
+}
+
 // Faint marine glyphs — the subject's own vocabulary, kept quiet enough that
 // the type stays the loudest thing on the screen.
 function MarineWatermark() {
@@ -101,48 +123,6 @@ function MarineWatermark() {
       </defs>
       <rect width="100%" height="100%" fill="url(#marine)" />
     </svg>
-  );
-}
-
-function LoungeNotice() {
-  return (
-    <section className="mt-6 rounded-2xl border border-border/60 bg-card/50 px-4 py-3.5">
-      <h2 className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-        Networking Lounge notice
-      </h2>
-      <p className="mt-2 text-[9.5px] leading-[1.6] text-muted-foreground/85">
-        To facilitate professional networking during K-Marine Tech Open Innovation Day, this
-        directory displays the name, organisation, designation and primary business interests of
-        registered attendees.
-      </p>
-      <dl className="mt-2 space-y-1.5 text-[9.5px] leading-[1.6]">
-        <div>
-          <dt className="inline font-semibold text-navy/70">Exclusive access. </dt>
-          <dd className="inline text-muted-foreground/85">
-            This directory is strictly private and accessible only to verified attendees present at
-            the event.
-          </dd>
-        </div>
-        <div>
-          <dt className="inline font-semibold text-navy/70">No direct contact info. </dt>
-          <dd className="inline text-muted-foreground/85">
-            Personal contact information such as email addresses and phone numbers is not displayed
-            or shared.
-          </dd>
-        </div>
-        <div>
-          <dt className="inline font-semibold text-navy/70">Data management. </dt>
-          <dd className="inline text-muted-foreground/85">
-            To update your details or opt out of being listed, use “Add or update my link” inside
-            the lounge, or contact the organising team at{" "}
-            <a href="mailto:support@lodestart.ai" className="font-medium text-primary hover:underline">
-              support@lodestart.ai
-            </a>
-            .
-          </dd>
-        </div>
-      </dl>
-    </section>
   );
 }
 
@@ -181,7 +161,7 @@ function LoungePage() {
       setGateError(
         auth.key
           ? "This access link is no longer active. Enter the email you used to RSVP instead."
-          : "No RSVP found with this email. Use the address you registered with.",
+          : "No RSVP found with this email — please RSVP first, then come back in.",
       );
     }
   };
@@ -250,69 +230,179 @@ function LoungePage() {
 
       <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
         {!profiles ? (
-          <div className="mx-auto max-w-md">
-            {key && !gateError ? (
-              /* QR arrival — welcome, then enter on tap */
-              <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-7 text-center shadow-sm">
-                <MarineWatermark />
-                <div className="relative">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                    K-Marine Tech Open Innovation Day
+          <>
+            {/* ── HERO ── */}
+            <section className="relative -mx-4 -mt-6 overflow-hidden bg-gradient-to-br from-navy via-[#0d3fa8] to-primary px-4 pb-14 pt-10 sm:-mx-6 sm:-mt-8 sm:px-6 sm:pb-16 sm:pt-12">
+              {/* decorative field */}
+              <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+                <DotGrid className="absolute left-6 top-8 h-20 w-32 text-white/25" />
+                <DotGrid className="absolute bottom-10 left-1/3 h-16 w-24 text-white/15" />
+                <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full border-[10px] border-white/10" />
+                <div className="absolute right-1/3 top-6 h-0 w-0 border-b-[26px] border-l-[16px] border-r-[16px] border-b-white/15 border-l-transparent border-r-transparent rotate-[24deg]" />
+                <div className="absolute -bottom-20 -left-14 h-48 w-48 rounded-full bg-white/5" />
+              </div>
+
+              <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+                    K-Marine Tech Open Innovation Day 2026
                   </div>
                   <h1
-                    className="mt-3 text-[28px] font-extrabold leading-[1.1] tracking-tight text-navy sm:text-[36px]"
+                    className="mt-3 text-[32px] font-extrabold leading-[1.12] tracking-tight text-white sm:text-[42px]"
                     style={{ fontFamily: 'Arial, "Helvetica Neue", Helvetica, sans-serif' }}
                   >
                     Welcome To The
                     <br />
                     Virtual Networking Lounge
                   </h1>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    See who else is in the room today — name, company and role — and keep the
-                    conversations going after the event.
+                  <p className="mt-4 max-w-md text-[15px] leading-relaxed text-sky-100/90">
+                    Connect, collaborate, and explore opportunities with innovators, investors, and
+                    partners in the marine tech ecosystem.
                   </p>
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => void load({ key })}
-                    className="mt-6 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    {loading ? "Opening…" : "Enter the lounge"}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm">
-                <MarineWatermark />
-                <div className="relative">
-                <h1 className="font-display text-xl font-bold text-navy">Attendees only</h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Enter the email you used to RSVP to browse everyone joining on 2 September and keep
-                  the conversations going afterwards.
-                </p>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && email.trim() && void load({ email: email.trim() })}
-                  placeholder="you@company.com"
-                  className="mt-4 w-full rounded-lg border border-input px-3 py-2.5 text-base sm:text-sm"
-                />
-                {gateError && <p className="mt-2 text-xs text-red-600">{gateError}</p>}
-                <button
-                  type="button"
-                  disabled={!email.trim() || loading}
-                  onClick={() => void load({ email: email.trim() })}
-                  className="mt-4 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {loading ? "Checking…" : "Enter the lounge"}
-                </button>
-                </div>
-              </div>
-            )}
 
-            <LoungeNotice />
-          </div>
+                  {/* gate card */}
+                  <div className="mt-7 max-w-md rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5">
+                    {key && !gateError ? (
+                      <>
+                        <div className="text-sm font-bold text-white">You're verified via the event QR</div>
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => void load({ key })}
+                          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {loading ? "Opening…" : "Enter the lounge"}
+                          <span aria-hidden="true">→</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-sm font-bold text-white">To enter the lounge, input your email</div>
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                          <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && email.trim() && void load({ email: email.trim() })}
+                            placeholder="Enter your email address"
+                            className="min-w-0 flex-1 rounded-lg border border-white/30 bg-white px-3 py-2.5 text-base text-navy placeholder:text-slate-400 sm:text-sm"
+                          />
+                          <button
+                            type="button"
+                            disabled={!email.trim() || loading}
+                            onClick={() => void load({ email: email.trim() })}
+                            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
+                          >
+                            {loading ? "Checking…" : "Enter lounge"}
+                            {!loading && <span aria-hidden="true">→</span>}
+                          </button>
+                        </div>
+                        {gateError && (
+                          <p className="mt-2.5 text-xs leading-relaxed text-rose-200">
+                            {gateError}{" "}
+                            <a href="/book" className="font-semibold text-white underline underline-offset-2">
+                              RSVP here →
+                            </a>
+                          </p>
+                        )}
+                      </>
+                    )}
+                    <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-sky-100/80">
+                      <LockGlyph className="mt-0.5 h-3 w-3 shrink-0" />
+                      RSVP attendees only. Please use the email you registered with.
+                    </p>
+                  </div>
+                </div>
+
+                {/* arch visual */}
+                <div className="relative mx-auto hidden w-full max-w-[300px] lg:block">
+                  <div className="relative overflow-hidden rounded-t-[150px] rounded-b-3xl border-4 border-white/25 bg-white px-8 pb-10 pt-16 text-center shadow-xl">
+                    <MarineWatermark />
+                    <div className="relative">
+                      <img src={kimstLogo} alt="KIMST" className="mx-auto h-12 w-auto object-contain" />
+                      <div className="mt-2 text-sm font-bold text-navy">Networking Lounge</div>
+                      <div className="mt-3 flex items-center justify-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary/45" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary/25" />
+                      </div>
+                      <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
+                        Name · company · role
+                        <br />
+                        of everyone in the room
+                      </p>
+                    </div>
+                  </div>
+                  <div aria-hidden="true" className="absolute -left-8 bottom-6 h-14 w-14 rounded-full bg-white/10" />
+                  <div aria-hidden="true" className="absolute -right-10 top-10 h-0 w-0 border-b-[22px] border-l-[13px] border-r-[13px] border-b-white/20 border-l-transparent border-r-transparent -rotate-12" />
+                </div>
+              </div>
+            </section>
+
+            {/* ── NOTICE ── */}
+            <section className="mx-auto max-w-3xl py-10 sm:py-12">
+              <div className="flex gap-4 rounded-2xl border border-primary/15 bg-card p-5 shadow-sm sm:gap-5 sm:p-6">
+                <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:flex">
+                  <LockGlyph className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-bold text-navy">Networking Lounge Notice</h2>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    To facilitate professional networking during K-Marine Tech Open Innovation Day,
+                    this directory displays the name, organisation, designation and primary business
+                    interests of registered attendees.
+                  </p>
+                  <dl className="mt-3 space-y-2 text-xs leading-relaxed">
+                    <div>
+                      <dt className="inline font-semibold text-navy">Exclusive access. </dt>
+                      <dd className="inline text-muted-foreground">
+                        This directory is strictly private and accessible only to verified attendees
+                        present at the event.
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="inline font-semibold text-navy">No direct contact info. </dt>
+                      <dd className="inline text-muted-foreground">
+                        Personal contact information such as email addresses and phone numbers is not
+                        displayed or shared.
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="inline font-semibold text-navy">Data management. </dt>
+                      <dd className="inline text-muted-foreground">
+                        To update your details or opt out of being listed, use “Add or update my
+                        link” inside the lounge, or contact the organising team at{" "}
+                        <a href="mailto:support@lodestart.ai" className="font-medium text-primary hover:underline">
+                          support@lodestart.ai
+                        </a>
+                        .
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </section>
+
+            {/* ── FOOTER ── */}
+            <footer className="-mx-4 -mb-16 bg-navy px-4 py-8 sm:-mx-6 sm:px-6">
+              <div className="mx-auto grid max-w-6xl gap-6 text-sm sm:grid-cols-3">
+                <img src={kimstLogo} alt="KIMST" className="h-10 w-auto object-contain brightness-0 invert" />
+                <div>
+                  <div className="font-bold text-white">KIMST 2026</div>
+                  <div className="mt-1 text-xs text-sky-200/80">K-Marine Tech Open Innovation Day</div>
+                </div>
+                <div>
+                  <div className="font-bold text-white">Contact</div>
+                  <div className="mt-1 text-xs text-sky-200/80">
+                    For inquiries, please contact{" "}
+                    <a href="mailto:support@lodestart.ai" className="text-sky-300 hover:underline">
+                      support@lodestart.ai
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </footer>
+          </>
         ) : (
           <div className="lg:grid lg:grid-cols-[248px_1fr] lg:gap-8">
             {/* ── side rail ─────────────────────────────── */}
@@ -642,9 +732,11 @@ function LoungePage() {
           </div>
         )}
 
-        <footer className="mt-10 text-center text-xs text-muted-foreground">
-          Hosted by KIMST · Organized by MYSC &amp; LodestarT
-        </footer>
+        {profiles && (
+          <footer className="mt-10 text-center text-xs text-muted-foreground">
+            Hosted by KIMST · Organized by MYSC &amp; LodestarT
+          </footer>
+        )}
       </main>
     </div>
   );

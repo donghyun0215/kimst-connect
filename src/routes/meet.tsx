@@ -177,6 +177,12 @@ function MeetPage() {
           </Link>
           <nav className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <Link
+              to="/lounge"
+              className="rounded-full bg-secondary px-2.5 py-1.5 text-[11px] font-semibold text-secondary-foreground transition hover:bg-accent sm:px-4 sm:py-2 sm:text-sm"
+            >
+              Lounge
+            </Link>
+            <Link
               to="/book"
               className="rounded-full bg-secondary px-2.5 py-1.5 text-[11px] font-semibold text-secondary-foreground transition hover:bg-accent sm:px-4 sm:py-2 sm:text-sm"
             >

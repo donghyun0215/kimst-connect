@@ -81,11 +81,9 @@ function RsvpPage() {
 
   // rsvp form
   const [attend, setAttend] = useState({ showcase: false, lunch: false, meetups: false });
-  const [selections, setSelections] = useState<Record<string, string | null>>({
-    slot1: null,
-    slot2: null,
-    slot3: null,
-  });
+  const [selections, setSelections] = useState<Record<string, string | null>>(
+    () => Object.fromEntries(TIMESLOTS.map((t) => [t.id, null])),
+  );
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -249,7 +247,7 @@ function RsvpPage() {
     setLookupEmail(payload.email);
     setLookupResults(null);
     setSubmitted({ attend: { ...attend }, bookings: result.bookingResults });
-    setSelections({ slot1: null, slot2: null, slot3: null });
+    setSelections(Object.fromEntries(TIMESLOTS.map((t) => [t.id, null])));
     await refreshAvailability();
     await syncMyBookingsFromServer(payload.email);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -304,12 +302,20 @@ function RsvpPage() {
           <Link to="/" className="flex items-center gap-3 min-w-0">
             <img src={kimstLogo} alt="KIMST" className="h-10 w-auto shrink-0 object-contain sm:h-12 md:h-14" />
           </Link>
-          <Link
-            to="/"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10 sm:px-4 sm:text-sm"
-          >
-            ← Home
-          </Link>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <Link
+              to="/lounge"
+              className="inline-flex items-center rounded-full bg-secondary px-3.5 py-1.5 text-xs font-semibold text-secondary-foreground transition hover:bg-accent sm:px-4 sm:text-sm"
+            >
+              Lounge
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10 sm:px-4 sm:text-sm"
+            >
+              ← Home
+            </Link>
+          </div>
         </div>
       </header>
 
