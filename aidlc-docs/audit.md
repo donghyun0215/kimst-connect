@@ -293,3 +293,18 @@ Verified: tsc ✓ build ✓.
 
 Verified: tsc ✓ build ✓; roster renders and no attendee emails appear in the
 page payload.
+
+---
+
+## 2026-08-25 — Reminder bug: new rounds misfiled as Nuldam sessions
+
+Caught while reviewing an exported CSV before a 90-person send.
+`reminders.ts` held a hardcoded `DAY_SLOT_IDS = {slot1, slot2, slot3}`, so the
+rounds added on 24 Aug (`slot4`, `slot5`) fell through to the Nuldam bucket —
+attendees meeting a startup at Suntec at 13:00 would have been told to go to
+Nuldam Space. Now derived from `TIMESLOTS`, so any future round is covered.
+Round labels also read "(Round 1)" rather than "(1:1 Round 1)".
+
+Lesson recorded: the same hardcoded-slot-list pattern was removed from
+`/book` on 24 Aug; this was the surviving copy. Worth grepping for others when
+slots change again.

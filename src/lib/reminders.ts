@@ -1,6 +1,7 @@
 import type { AdminBooking, AdminRsvp } from "./booking.server";
 import { getCompanyBySlug } from "@/data/companies";
 import {
+  TIMESLOTS,
   EVENT_ADDRESS,
   EVENT_MAP_URL,
   EVENT_VENUE,
@@ -26,7 +27,7 @@ export interface Reminder {
 const SITE = "https://kimst-rsvp-2026.vercel.app";
 const SUBJECT = "Your schedule — K-Marine Tech Open Innovation Day, 2 Sep";
 
-const DAY_SLOT_IDS = new Set(["slot1", "slot2", "slot3"]);
+const DAY_SLOT_IDS = new Set(TIMESLOTS.map((t) => t.id));
 
 function programTime(id: "showcase" | "lunch" | "meetups"): string {
   return PROGRAM.find((b) => b.id === id)?.time ?? "";
@@ -59,9 +60,9 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
         schedule.push(`• Networking Lunch — ${programTime("lunch")}\n  Complimentary buffet with the founders and fellow attendees.`);
       }
       for (const m of dayMeetings) {
-        const info = getSlotInfo(m.timeslot_id);
+        const slot = TIMESLOTS.find((t) => t.id === m.timeslot_id);
         const company = getCompanyBySlug(m.company_id)?.name ?? m.company_id;
-        schedule.push(`• 1:1 Meeting with ${company} — ${info.time} (${info.label})`);
+        schedule.push(`• 1:1 Meeting with ${company} — ${slot?.time ?? ""} (${slot?.label ?? ""})`);
       }
 
       const lines: string[] = [];
