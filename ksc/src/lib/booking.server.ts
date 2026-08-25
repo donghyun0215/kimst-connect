@@ -505,3 +505,29 @@ export const updateContactUrl = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// ── 1:1 meeting roster for the internal schedule page ──────────────
+// One-line attendee profiles per booking. Deliberately excludes email,
+// phone and notes — the roster is for startups preparing their meetings.
+
+export interface RosterEntry {
+  company_id: string;
+  timeslot_id: string;
+  full_name: string;
+  organisation: string;
+  job_title: string;
+  primary_interest: string | null;
+}
+
+export const fetchMeetingRoster = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ entries: RosterEntry[] }> => {
+    const { data, error } = await supabaseAdmin
+      .from("bookings")
+      .select("company_id, timeslot_id, full_name, organisation, job_title, primary_interest");
+    if (error) {
+      console.error("fetchMeetingRoster error:", error);
+      return { entries: [] };
+    }
+    return { entries: (data ?? []) as RosterEntry[] };
+  },
+);

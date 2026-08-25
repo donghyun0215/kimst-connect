@@ -232,3 +232,26 @@ skyline art plus the three social icon roundels (decorative, non-linking — no
 real accounts exist to link).
 
 Verified: tsc ✓ build ✓.
+
+---
+
+## 2026-08-25 — Schedule page: 1:1 Meeting Roster (client request)
+
+**From Tammy:** add one-line profiles of everyone doing 1:1 meetups, grouped by
+company, as a separate menu on the internal schedule page.
+
+- New unauthenticated GET server fn `fetchMeetingRoster` returning only
+  company_id, timeslot_id, full_name, organisation, job_title,
+  primary_interest — email/phone/notes never leave the server. Same exposure
+  level as the lounge, on the same unlisted-page posture as /schedule (R10);
+  client-directed.
+- `/schedule` gains a pill menu: 프로그램 일정 / 1:1 미팅 로스터. Roster view:
+  per-company cards (track-tinted headers, sector line, Track badge) listing
+  each offered round (label + time) with the attendee one-liner — name bold,
+  role @ org muted, interest chip — or "미배정 (오픈)". Nuldam in-depth
+  sessions rendered below in the same card language. Confirmed-count stat and
+  a manual refresh button; DB-driven, so it stays current as bookings change.
+- No schema change; read-only.
+
+Verified: tsc ✓ build ✓ menu renders ✓ (data path exercises on prod where the
+real service key exists).
