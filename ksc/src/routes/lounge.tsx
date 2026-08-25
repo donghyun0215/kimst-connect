@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import kimstLogo from "@/assets/kimst-logo.png";
+import { companies } from "@/data/companies";
 import loungeHeroArt from "@/assets/lounge-hero-illustration.png";
 import loungeFooterArt from "@/assets/lounge-footer-art.png";
 import {
@@ -150,13 +151,24 @@ function LoungePage() {
   const [cMsg, setCMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [cBusy, setCBusy] = useState(false);
 
-  // Per the organiser's decision, pre-event browsing is closed: the email
-  // gate opens on event day. The QR key path stays live for on-site access
-  // and for the team. After 2 Sep the email gate serves post-event access.
+  // Per the organiser's decision, pre-event browsing is closed for general
+  // attendees: the email gate opens on event day. Exceptions who may enter
+  // early: organising staff (by domain) and the participating startups (their
+  // registered company emails) — they run the event and prep their meetings.
+  // The QR key path stays live throughout. After 2 Sep the gate serves
+  // post-event access for everyone.
   const LOUNGE_OPENS = new Date("2026-09-02T00:00:00+08:00");
+  const EARLY_DOMAINS = ["lodestart.ai", "mysc.co.kr", "kimst.re.kr"];
+  const EARLY_EMAILS = new Set(companies.map((c) => c.email.toLowerCase()).filter(Boolean));
+
+  const hasEarlyAccess = (email: string) => {
+    const e = email.toLowerCase().trim();
+    const domain = e.split("@")[1] ?? "";
+    return EARLY_DOMAINS.includes(domain) || EARLY_EMAILS.has(e);
+  };
 
   const load = async (auth: { key?: string; email?: string }) => {
-    if (auth.email && Date.now() < LOUNGE_OPENS.getTime()) {
+    if (auth.email && Date.now() < LOUNGE_OPENS.getTime() && !hasEarlyAccess(auth.email)) {
       setGateError("The lounge opens on event day, 2 September — scan the QR code at the venue to enter. See you at Suntec!");
       return;
     }

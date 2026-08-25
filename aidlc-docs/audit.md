@@ -332,3 +332,16 @@ those attendees to confirm rather than provide.
 
 Verified: tsc ✓ build ✓; both content branches render; no /lounge URL in any
 email body.
+
+---
+
+## 2026-08-26 — Lounge email gate reopened pre-event
+
+Owner call: the 2-Sep date lock on the email gate (added earlier the same day)
+is removed. Rationale: participating startups (tracks 1–2) and MYSC/Lodestart
+staff already hold the QR and have RSVP'd, and general attendees were never
+given the lounge URL — the reminder emails deliberately omit it — so the date
+filter added friction for insiders without meaningfully blocking anyone else.
+The email gate is again the single rule: any registered RSVP email enters, any
+time. Noted: /lounge remains discoverable via site nav, so early browsing by a
+determined attendee is possible and accepted.
