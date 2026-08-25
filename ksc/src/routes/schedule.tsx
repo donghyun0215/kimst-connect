@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import kimstLogo from "@/assets/kimst-logo.png";
 import { companies } from "@/data/companies";
-import { NULDAM_TRACKS, NULDAM_COMPANY_SLUGS, TIMESLOTS, isSlotOffered } from "@/data/timeslots";
+import { EVENT_DATE, EVENT_VENUE, NULDAM_TRACKS, NULDAM_COMPANY_SLUGS, TIMESLOTS, isSlotOffered } from "@/data/timeslots";
 import { fetchMeetingRoster, type RosterEntry } from "@/lib/booking.server";
 
 // Unlisted internal page for programme stakeholders — intentionally not linked
@@ -522,6 +522,27 @@ function SchedulePage() {
 }
 
 
+function LinkGlyph({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
+      <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+    </svg>
+  );
+}
+
+function rosterInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function rosterContactLabel(url: string): string {
+  if (/linkedin\.com/i.test(url)) return "LinkedIn";
+  if (/open\.kakao\.com/i.test(url)) return "KakaoTalk";
+  return "Website";
+}
+
 // ── 1:1 Meeting Roster — who each startup meets, round by round ──
 const INTEREST_CHIP: Record<string, string> = {
   Investment: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
@@ -533,6 +554,7 @@ const INTEREST_CHIP: Record<string, string> = {
 function MeetingRoster() {
   const [entries, setEntries] = useState<RosterEntry[] | null>(null);
   const [error, setError] = useState(false);
+  const [selected, setSelected] = useState<{ entry: RosterEntry; company: string; when: string } | null>(null);
 
   const load = async () => {
     setError(false);
@@ -556,10 +578,14 @@ function MeetingRoster() {
 
   const ordered = [...companies].sort((a, b) => (a.track === b.track ? a.name.localeCompare(b.name) : a.track.localeCompare(b.track)));
 
-  const Line = ({ e }: { e: RosterEntry | undefined }) =>
+  const Line = ({ e, company, when }: { e: RosterEntry | undefined; company: string; when: string }) =>
     e ? (
-      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-        <span className="truncate text-[13px] font-semibold text-navy">{e.full_name}</span>
+      <button
+        type="button"
+        onClick={() => setSelected({ entry: e, company, when })}
+        className="group flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 rounded-md px-1 py-0.5 text-left transition hover:bg-primary/5"
+      >
+        <span className="truncate text-[13px] font-semibold text-navy group-hover:text-primary">{e.full_name}</span>
         <span className="min-w-0 truncate text-xs text-muted-foreground">
           {e.job_title} @ {e.organisation}
         </span>
@@ -572,7 +598,8 @@ function MeetingRoster() {
             {e.primary_interest}
           </span>
         )}
-      </div>
+        {e.contact_url && <LinkGlyph className="h-3 w-3 shrink-0 text-primary" />}
+      </button>
     ) : (
       <span className="text-xs text-muted-foreground/60">— 미배정 (오픈)</span>
     );
@@ -607,7 +634,12 @@ function MeetingRoster() {
       ) : (
         <>
           {/* 2 Sep rounds */}
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+            <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-primary-foreground">9월 2일 (수)</span>
+            <span className="text-sm font-semibold text-navy">Open Innovation Day · 1:1 미팅</span>
+            <span className="text-xs text-muted-foreground">{EVENT_VENUE} · 13:00–16:00</span>
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             {ordered.map((c) => {
               const isT1 = c.track === "track1";
               return (
@@ -628,7 +660,7 @@ function MeetingRoster() {
                           <div className="text-[11px] font-bold text-primary">{t.label}</div>
                           <div className="text-[10px] tabular-nums text-muted-foreground">{t.time}</div>
                         </div>
-                        <Line e={byKey.get(`${c.slug}:${t.id}`)} />
+                        <Line e={byKey.get(`${c.slug}:${t.id}`)} company={c.name} when={`${t.label} · ${t.time} · 9월 2일(수)`} />
                       </li>
                     ))}
                   </ul>
@@ -659,7 +691,7 @@ function MeetingRoster() {
                           <div className="w-24 shrink-0">
                             <div className="text-[10px] tabular-nums text-muted-foreground">{sl.time}</div>
                           </div>
-                          <Line e={byKey.get(`${slug}:${sl.id}`)} />
+                          <Line e={byKey.get(`${slug}:${sl.id}`)} company={c.name} when={`${sl.time} · ${tr.dateLabel}`} />
                         </li>
                       ))}
                     </ul>
@@ -669,6 +701,74 @@ function MeetingRoster() {
             )}
           </div>
         </>
+      )}
+
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card shadow-xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative bg-secondary/60 px-6 pb-6 pt-8 text-center">
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                aria-label="닫기"
+                className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground transition hover:bg-background hover:text-navy"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground ring-4 ring-background">
+                {rosterInitials(selected.entry.full_name)}
+              </div>
+              <div className="mt-3 text-lg font-bold text-navy">{selected.entry.full_name}</div>
+              {selected.entry.primary_interest && (
+                <span
+                  className={`mt-2 inline-block rounded-full px-3 py-1 text-[11px] font-semibold ring-1 ring-inset ${
+                    INTEREST_CHIP[selected.entry.primary_interest] ?? "bg-background text-navy ring-border"
+                  }`}
+                >
+                  {selected.entry.primary_interest}
+                </span>
+              )}
+            </div>
+            <div className="space-y-3 px-6 py-5">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">소속</div>
+                <div className="mt-0.5 break-words text-sm font-semibold text-navy">{selected.entry.organisation}</div>
+              </div>
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">직함</div>
+                <div className="mt-0.5 break-words text-sm text-navy/90">{selected.entry.job_title}</div>
+              </div>
+              <div className="rounded-lg bg-primary/5 px-3 py-2.5">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">미팅</div>
+                <div className="mt-0.5 text-sm font-semibold text-navy">{selected.company}</div>
+                <div className="text-xs text-muted-foreground">{selected.when}</div>
+              </div>
+              {selected.entry.contact_url ? (
+                <a
+                  href={selected.entry.contact_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-navy py-2.5 text-sm font-semibold text-white transition hover:bg-navy/85"
+                >
+                  <LinkGlyph className="h-4 w-4" />
+                  {rosterContactLabel(selected.entry.contact_url)} 프로필 열기
+                </a>
+              ) : (
+                <p className="rounded-lg bg-secondary/60 px-3 py-2 text-center text-xs text-muted-foreground">
+                  등록된 프로필 링크가 없습니다
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -519,17 +519,38 @@ export interface RosterEntry {
   organisation: string;
   job_title: string;
   primary_interest: string | null;
+  contact_url: string | null;
 }
 
 export const fetchMeetingRoster = createServerFn({ method: "GET" }).handler(
   async (): Promise<{ entries: RosterEntry[] }> => {
     const { data, error } = await supabaseAdmin
       .from("bookings")
-      .select("company_id, timeslot_id, full_name, organisation, job_title, primary_interest");
+      .select("company_id, timeslot_id, full_name, organisation, job_title, primary_interest, email");
     if (error) {
       console.error("fetchMeetingRoster error:", error);
       return { entries: [] };
     }
-    return { entries: (data ?? []) as RosterEntry[] };
+
+    // Attach lounge contact links, but only for attendees who opted in.
+    const { data: rsvps } = await supabaseAdmin
+      .from("rsvps")
+      .select("email, contact_url, show_in_lounge");
+    const links = new Map<string, string | null>();
+    for (const r of rsvps ?? []) {
+      if (r.show_in_lounge && r.contact_url) links.set(String(r.email).toLowerCase(), r.contact_url);
+    }
+
+    // Email is used for the join only — it never leaves the server.
+    const entries: RosterEntry[] = (data ?? []).map((b) => ({
+      company_id: b.company_id,
+      timeslot_id: b.timeslot_id,
+      full_name: b.full_name,
+      organisation: b.organisation,
+      job_title: b.job_title,
+      primary_interest: b.primary_interest,
+      contact_url: links.get(String(b.email).toLowerCase()) ?? null,
+    }));
+    return { entries };
   },
 );

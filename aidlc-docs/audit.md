@@ -273,3 +273,23 @@ through the public lounge mini-form, one at a time.
   "linkedin", so the search step doesn't require retyping.
 
 Verified: tsc ✓ build ✓.
+
+---
+
+## 2026-08-25 — Roster: date labelling, attendee popup, contact links
+
+- **Date:** the 2 September grid now sits under a labelled banner (9월 2일 (수)
+  · Open Innovation Day · venue · 13:00–16:00); Nuldam sessions already carried
+  their own dates. Each popup also restates the meeting date.
+- **Popup:** roster lines became buttons opening the same bottom-sheet /
+  dialog pattern as the lounge — initials avatar, interest chip, full
+  organisation and role (no truncation), plus a highlighted block naming which
+  startup they're meeting and when.
+- **Contact links:** `fetchMeetingRoster` now joins `rsvps` to attach
+  `contact_url`, **only for attendees with `show_in_lounge = true`** — the
+  opt-out is honoured here too. Email is used for the join and dropped before
+  the response; a small link glyph marks rows that have a profile, and the
+  popup carries a "LinkedIn 프로필 열기" button.
+
+Verified: tsc ✓ build ✓; roster renders and no attendee emails appear in the
+page payload.
