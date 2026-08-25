@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import kimstLogo from "@/assets/kimst-logo.png";
 import loungeHeroArt from "@/assets/lounge-hero-illustration.png";
@@ -218,15 +218,30 @@ function LoungePage() {
     <div className="min-h-screen w-full overflow-x-hidden bg-secondary/40">
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <img src={kimstLogo} alt="KIMST" className="h-9 w-auto shrink-0 object-contain sm:h-11" />
-          {profiles && (
-            <div className="min-w-0 text-right">
-              <div className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-primary sm:text-[10px] sm:tracking-[0.2em]">
-                K-Marine Tech Open Innovation Day
-              </div>
-              <div className="truncate text-[13px] font-bold text-navy sm:text-sm">Virtual Networking Lounge</div>
-            </div>
-          )}
+          <Link to="/" className="flex min-w-0 items-center">
+            <img src={kimstLogo} alt="KIMST" className="h-9 w-auto shrink-0 object-contain sm:h-11" />
+          </Link>
+          <nav className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+            <Link
+              to="/"
+              className="rounded-full bg-secondary px-2.5 py-1.5 text-[11px] font-semibold text-secondary-foreground transition hover:bg-accent sm:px-4 sm:py-2 sm:text-sm"
+            >
+              Home
+            </Link>
+            <Link
+              to="/"
+              hash="startups"
+              className="hidden rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition hover:bg-accent sm:block"
+            >
+              Startups
+            </Link>
+            <Link
+              to="/book"
+              className="rounded-full bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2 sm:text-sm"
+            >
+              Event RSVP<span className="hidden sm:inline"> (2 Sep)</span>
+            </Link>
+          </nav>
         </div>
       </header>
 
