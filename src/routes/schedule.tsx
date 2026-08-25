@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import kimstLogo from "@/assets/kimst-logo.png";
 import { companies } from "@/data/companies";
-import { EVENT_DATE, EVENT_VENUE, NULDAM_TRACKS, NULDAM_COMPANY_SLUGS, TIMESLOTS, isSlotOffered } from "@/data/timeslots";
+import { EVENT_DATE, EVENT_VENUE, NULDAM_VENUE, NULDAM_TRACKS, NULDAM_COMPANY_SLUGS, TIMESLOTS, isSlotOffered } from "@/data/timeslots";
 import { fetchMeetingRoster, type RosterEntry } from "@/lib/booking.server";
 
 // Unlisted internal page for programme stakeholders — intentionally not linked
@@ -670,8 +670,11 @@ function MeetingRoster() {
           </div>
 
           {/* Nuldam in-depth sessions */}
-          <h3 className="mt-10 font-display text-lg font-bold text-navy">심층 1:1 (Nuldam Space)</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Track 1 — 8/31(월) · Track 2 — 9/4(금) · 40분 세션</p>
+          <div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-navy/15 bg-navy/[0.04] px-4 py-3">
+            <span className="rounded-full bg-navy px-3 py-1 text-[11px] font-bold text-white">8월 31일 (월) · 9월 4일 (금)</span>
+            <span className="text-sm font-semibold text-navy">심층 1:1 · Nuldam Space</span>
+            <span className="text-xs text-muted-foreground">{NULDAM_VENUE} · 40분 세션 · Track 1 — 8/31 · Track 2 — 9/4</span>
+          </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             {NULDAM_TRACKS.map((tr) =>
               NULDAM_COMPANY_SLUGS[tr.id].map((slug) => {
