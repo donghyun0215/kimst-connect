@@ -29,7 +29,7 @@ const SUBJECT = "Your schedule — K-Marine Tech Open Innovation Day, 2 Sep";
 
 // Change the sender block here if someone else signs the mailout.
 const SIGN_NAME = "Tammy Ahn";
-const SIGN_ORG = "Vice Chairman, KOCHAM Singapore";
+const SIGN_ORG = "Vice President, KOCHAM Singapore";
 
 const DAY_SLOT_IDS = new Set(TIMESLOTS.map((t) => t.id));
 
@@ -116,11 +116,19 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
       if (r.additional_attendees) {
         t.push("", `Badges will be ready for you and ${r.additional_attendees}.`);
       }
-      t.push("", "BEFORE YOU COME", "-----------------------------");
-      t.push("We've opened a Virtual Networking Lounge - an attendee-only directory where you can see who else is joining and stay in touch afterwards.");
-      t.push(`${SITE}/lounge`);
-      t.push("Sign in with this email address, then add your LinkedIn so others can reach you. Only your name, organisation and job title are shown - emails and phone numbers never are.", "");
-      t.push(`Need to change anything? Look up your booking at ${SITE}/book`, "");
+      t.push("", "NETWORKING ON THE DAY", "-----------------------------");
+      t.push("We've prepared a Virtual Networking Lounge - a private, attendee-only directory of everyone in the room (name, organisation and role), so conversations can continue after the day itself.");
+      t.push("The lounge opens on-site: scan the QR code at the venue on 2 September to browse who's there.", "");
+      if (r.contact_url) {
+        t.push("Your lounge card links to this LinkedIn profile:");
+        t.push(`  ${r.contact_url}`);
+        t.push("If that isn't you, or you'd prefer a different link, simply reply to this email and we'll update it.");
+      } else {
+        t.push("To let fellow attendees reach you, reply to this email with your LinkedIn profile URL and we'll add it to your card before the event.");
+      }
+      t.push("");
+      t.push("Personal contact details - emails and phone numbers - are never displayed. Connections happen through LinkedIn only.", "");
+      t.push(`Need to change your booking? ${SITE}/book`, "");
       t.push("See you on the 2nd.", "");
       t.push("Warm regards,", SIGN_NAME, SIGN_ORG);
 
@@ -179,20 +187,33 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
           `<p style="margin:16px 0 0;font-size:14px;">Badges will be ready for you and <strong>${esc(r.additional_attendees)}</strong>.</p>`,
         );
       }
-      h.push(sectionTitle("Before you come"));
+      h.push(sectionTitle("Networking on the day"));
       h.push(
-        `<p style="margin:0 0 12px;">We've opened a <strong>Virtual Networking Lounge</strong> — an attendee-only directory where you can see who else is joining and stay in touch afterwards.</p>`,
+        `<p style="margin:0 0 12px;">We've prepared a <strong>Virtual Networking Lounge</strong> — a private, attendee-only directory of everyone in the room (name, organisation and role), so conversations can continue after the day itself.</p>`,
       );
       h.push(
-        `<p style="margin:0 0 14px;">` +
-          `<a href="${SITE}/lounge" style="display:inline-block;background:#0766EE;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 20px;border-radius:999px;">Open the Networking Lounge</a>` +
-          `</p>`,
+        `<p style="margin:0 0 14px;">The lounge opens <strong>on-site</strong>: scan the QR code at the venue on 2 September to browse who's there.</p>`,
+      );
+      if (r.contact_url) {
+        h.push(
+          `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#F2F6FC;border-radius:6px;"><tr><td style="padding:12px 16px;font-size:14px;">` +
+            `Your lounge card links to this LinkedIn profile:<br>` +
+            `${link(r.contact_url, esc(r.contact_url))}<br>` +
+            `<span style="color:#5A6B87;">If that isn't you, or you'd prefer a different link, simply <strong>reply to this email</strong> and we'll update it.</span>` +
+            `</td></tr></table>`,
+        );
+      } else {
+        h.push(
+          `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#FFF8E7;border-radius:6px;"><tr><td style="padding:12px 16px;font-size:14px;">` +
+            `To let fellow attendees reach you, <strong>reply to this email with your LinkedIn profile URL</strong> and we'll add it to your card before the event.` +
+            `</td></tr></table>`,
+        );
+      }
+      h.push(
+        `<p style="margin:14px 0 18px;font-size:13px;color:#5A6B87;">Personal contact details — emails and phone numbers — are never displayed. Connections happen through LinkedIn only.</p>`,
       );
       h.push(
-        `<p style="margin:0 0 18px;font-size:14px;color:#5A6B87;">Sign in with this email address, then add your LinkedIn so others can reach you — it takes a few seconds and no re-registration is needed. Only your name, organisation and job title are shown; emails and phone numbers never are.</p>`,
-      );
-      h.push(
-        `<p style="margin:0 0 22px;font-size:14px;">Need to change anything? ${link(`${SITE}/book`, "Manage your booking")}.</p>`,
+        `<p style="margin:0 0 22px;font-size:14px;">Need to change your booking? ${link(`${SITE}/book`, "Manage it here")}.</p>`,
       );
       h.push(`<p style="margin:0 0 18px;">See you on the 2nd.</p>`);
       h.push(

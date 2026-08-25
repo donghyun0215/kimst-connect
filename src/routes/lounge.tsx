@@ -150,7 +150,16 @@ function LoungePage() {
   const [cMsg, setCMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [cBusy, setCBusy] = useState(false);
 
+  // Per the organiser's decision, pre-event browsing is closed: the email
+  // gate opens on event day. The QR key path stays live for on-site access
+  // and for the team. After 2 Sep the email gate serves post-event access.
+  const LOUNGE_OPENS = new Date("2026-09-02T00:00:00+08:00");
+
   const load = async (auth: { key?: string; email?: string }) => {
+    if (auth.email && Date.now() < LOUNGE_OPENS.getTime()) {
+      setGateError("The lounge opens on event day, 2 September — scan the QR code at the venue to enter. See you at Suntec!");
+      return;
+    }
     setLoading(true);
     setGateError("");
     const res = await listLoungeProfiles({ data: auth });

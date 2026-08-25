@@ -308,3 +308,27 @@ Round labels also read "(Round 1)" rather than "(1:1 Round 1)".
 Lesson recorded: the same hardcoded-slot-list pattern was removed from
 `/book` on 24 Aug; this was the surviving copy. Worth grepping for others when
 slots change again.
+
+---
+
+## 2026-08-26 — Reminder rework: on-site-only lounge, LinkedIn by reply
+
+**From Tammy:** don't hand out lounge access in the email — announce it as an
+on-site perk (people come to network; pre-event list access weakens the reason
+to show up). Collect LinkedIn URLs by reply, and re-state that emails/phones
+are never shown. ~70% of cards already have manually-backfilled links, so ask
+those attendees to confirm rather than provide.
+
+- Reminder emails no longer contain any lounge URL. New "Networking on the
+  day" section: lounge exists, attendee-only, **opens on-site via the venue
+  QR**. Per-recipient branch on `contact_url`: linked attendees see their
+  current LinkedIn URL with "reply if this isn't you"; unlinked attendees are
+  asked to reply with theirs. Privacy line restated. Signature now
+  "Tammy Ahn · Vice President, KOCHAM Singapore".
+- To keep the email honest, the lounge's **email gate now refuses entry before
+  2 Sep** (client-side check, friendly "opens on event day" message). The QR
+  key path stays live for on-site use and the team; after 2 Sep the email gate
+  resumes as the post-event access path.
+
+Verified: tsc ✓ build ✓; both content branches render; no /lounge URL in any
+email body.
