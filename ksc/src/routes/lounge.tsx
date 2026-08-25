@@ -406,34 +406,23 @@ function LoungePage() {
                 src={loungeFooterArt}
                 alt=""
                 aria-hidden="true"
-                className="pointer-events-none absolute bottom-0 right-0 h-full w-auto select-none opacity-90"
+                className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-auto select-none opacity-70 md:block"
                 draggable={false}
               />
-              <div className="relative mx-auto grid max-w-6xl gap-6 text-sm sm:grid-cols-3">
-                <img src={kimstLogo} alt="KIMST" className="h-10 w-auto object-contain brightness-0 invert" />
+              <div className="relative mx-auto flex max-w-6xl flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8 md:pr-44">
+                <img src={kimstLogo} alt="KIMST" className="h-10 w-auto self-start object-contain brightness-0 invert sm:self-center" />
                 <div>
-                  <div className="font-bold text-white">KIMST 2026</div>
+                  <div className="text-sm font-bold text-white">KIMST 2026</div>
                   <div className="mt-1 text-xs text-sky-200/80">K-Marine Tech Open Innovation Day</div>
-                  <div className="mt-3 flex gap-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#002a70]">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.2 8h4.6v14H.2V8zm7.6 0h4.4v1.9h.1c.6-1.1 2.1-2.3 4.3-2.3 4.6 0 5.4 3 5.4 6.9V22h-4.6v-6.6c0-1.6 0-3.6-2.2-3.6s-2.5 1.7-2.5 3.5V22H7.8V8z"/></svg>
-                    </span>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#002a70]">
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-6.4L6.4 22H3.3l7.3-8.3L1 2h6.4l4.4 5.9L18.9 2zm-1.1 18h1.7L7.3 3.9H5.5L17.8 20z"/></svg>
-                    </span>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#002a70]">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4L15.8 12l-6.2 3.6z"/></svg>
-                    </span>
-                  </div>
                 </div>
                 <div>
-                  <div className="font-bold text-white">Contact</div>
-                  <div className="mt-1 text-xs text-sky-200/80">
-                    For inquiries, please contact{" "}
-                    <a href="mailto:support@lodestart.ai" className="text-sky-300 hover:underline">
-                      support@lodestart.ai
-                    </a>
-                  </div>
+                  <div className="text-sm font-bold text-white">Contact</div>
+                  <a
+                    href="mailto:support@lodestart.ai"
+                    className="mt-1 block text-xs text-sky-300 hover:underline"
+                  >
+                    support@lodestart.ai
+                  </a>
                 </div>
               </div>
             </footer>
