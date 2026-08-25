@@ -345,3 +345,8 @@ filter added friction for insiders without meaningfully blocking anyone else.
 The email gate is again the single rule: any registered RSVP email enters, any
 time. Noted: /lounge remains discoverable via site nav, so early browsing by a
 determined attendee is possible and accepted.
+
+Correction: the previous commit (e69def6) recorded this change but a failed
+string match meant only the audit note landed; the gate code itself is removed
+in the follow-up commit. Noted as a process miss — the scripted edit asserted
+against stale content and the commit proceeded without re-verifying the diff.
