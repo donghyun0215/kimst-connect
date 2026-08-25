@@ -11,26 +11,39 @@ import {
   getSlotInfo,
 } from "@/data/timeslots";
 
-// Builds one personalised reminder email per RSVP: their programme-block
-// choices plus any 1:1 meetings booked under the same email. Rendered in the
-// admin dashboard for copy / mailto / CSV mail merge — the app itself sends
-// no email (deliberate scope limit, see aidlc-docs).
+// Builds one personalised reminder per RSVP in both HTML and plain text.
+// HTML is what recipients see: named links instead of raw URLs, which also
+// avoids Gmail's auto-linker swallowing the following line of text.
 
 export interface Reminder {
   email: string;
   name: string;
   subject: string;
-  body: string;
-  tags: string[]; // quick glance in the admin list, e.g. ["Showcase", "2 meetings"]
+  body: string; // plain-text fallback
+  html: string;
+  tags: string[];
 }
 
 const SITE = "https://kimst-rsvp-2026.vercel.app";
 const SUBJECT = "Your schedule — K-Marine Tech Open Innovation Day, 2 Sep";
 
+// Change the sender block here if someone else signs the mailout.
+const SIGN_NAME = "Tammy Ahn";
+const SIGN_ORG = "KIMST Singapore Connect · MYSC × Lodestart";
+
 const DAY_SLOT_IDS = new Set(TIMESLOTS.map((t) => t.id));
 
 function programTime(id: "showcase" | "lunch" | "meetups"): string {
   return PROGRAM.find((b) => b.id === id)?.time ?? "";
+}
+
+function esc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+interface ScheduleItem {
+  title: string;
+  detail?: string;
 }
 
 export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Reminder[] {
@@ -48,92 +61,162 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
       const dayMeetings = mine
         .filter((b) => DAY_SLOT_IDS.has(b.timeslot_id))
         .sort((a, b) => a.timeslot_id.localeCompare(b.timeslot_id));
-      const nuldamMeetings = mine
-        .filter((b) => !DAY_SLOT_IDS.has(b.timeslot_id))
-        .sort((a, b) => a.timeslot_id.localeCompare(b.timeslot_id));
+      const nuldamMeetings = mine.filter((b) => !DAY_SLOT_IDS.has(b.timeslot_id));
 
-      const schedule: string[] = [];
+      const schedule: ScheduleItem[] = [];
       if (r.attend_showcase) {
-        schedule.push(`• Success Story Showcase — ${programTime("showcase")}\n  Eight Korean startups present across marine technology and food technology.`);
+        schedule.push({
+          title: `Success Story Showcase — ${programTime("showcase")}`,
+          detail: "Eight Korean startups present across marine technology and food technology.",
+        });
       }
       if (r.attend_lunch) {
-        schedule.push(`• Networking Lunch — ${programTime("lunch")}\n  Complimentary buffet with the founders and fellow attendees.`);
+        schedule.push({
+          title: `Networking Lunch — ${programTime("lunch")}`,
+          detail: "Complimentary buffet with the founders and fellow attendees.",
+        });
       }
       for (const m of dayMeetings) {
         const slot = TIMESLOTS.find((t) => t.id === m.timeslot_id);
         const company = getCompanyBySlug(m.company_id)?.name ?? m.company_id;
-        schedule.push(`• 1:1 Meeting with ${company} — ${slot?.time ?? ""} (${slot?.label ?? ""})`);
+        schedule.push({ title: `1:1 Meeting with ${company} — ${slot?.time ?? ""} (${slot?.label ?? ""})` });
+      }
+      if (schedule.length === 0) {
+        schedule.push({ title: "You're registered for the 1:1 Onsite Meetups session." });
       }
 
-      const lines: string[] = [];
-      lines.push(`Dear ${r.full_name},`);
-      lines.push("");
-      lines.push("We're looking forward to welcoming you to the K-Marine Tech Open Innovation Day next week.");
-      lines.push("");
-      lines.push("📅 Wednesday, 2 September 2026 · 10:00 – 16:00");
-      lines.push(`📍 ${EVENT_VENUE}`);
-      lines.push(`   ${EVENT_ADDRESS}`);
-      lines.push(`   Map: ${EVENT_MAP_URL}`);
-      lines.push("");
-      lines.push("YOUR SCHEDULE");
-      lines.push("─────────────────────────────");
-      if (schedule.length > 0) {
-        lines.push(schedule.join("\n"));
-      } else {
-        lines.push("You're registered for the 1:1 Onsite Meetups session.");
+      const nuldam: ScheduleItem[] = nuldamMeetings.map((m) => {
+        const info = getSlotInfo(m.timeslot_id);
+        const day = (info.context ?? "").split("·")[0].trim();
+        const company = getCompanyBySlug(m.company_id)?.name ?? m.company_id;
+        return { title: `In-depth 1:1 with ${company} — ${day}, ${info.time}` };
+      });
+
+      // ── plain text ──
+      const t: string[] = [];
+      t.push(`Dear ${r.full_name},`, "");
+      t.push("We're looking forward to welcoming you to the K-Marine Tech Open Innovation Day next week.", "");
+      t.push("Wednesday, 2 September 2026 | 10:00 - 16:00");
+      t.push(EVENT_VENUE);
+      t.push(EVENT_ADDRESS);
+      t.push(`Google Maps: ${EVENT_MAP_URL}`, "");
+      t.push("YOUR SCHEDULE", "-----------------------------");
+      for (const it of schedule) {
+        t.push(`* ${it.title}`);
+        if (it.detail) t.push(`  ${it.detail}`);
       }
       if (dayMeetings.length === 0) {
-        lines.push("");
-        lines.push(`You haven't booked a 1:1 meeting with the startups yet — a few slots are still open: ${SITE}/book`);
+        t.push("", `No 1:1 meeting booked yet - a few slots are still open: ${SITE}/book`);
       }
-      if (nuldamMeetings.length > 0) {
-        lines.push("");
-        lines.push("ALSO ON YOUR CALENDAR");
-        lines.push("─────────────────────────────");
-        for (const m of nuldamMeetings) {
-          const info = getSlotInfo(m.timeslot_id);
-          const company = getCompanyBySlug(m.company_id)?.name ?? m.company_id;
-          const day = (info.context ?? "").split("·")[0].trim(); // date portion only
-          lines.push(`• In-depth 1:1 with ${company} — ${day}, ${info.time}`);
-        }
-        lines.push(`  ${NULDAM_VENUE}, ${NULDAM_ADDRESS}`);
+      if (nuldam.length) {
+        t.push("", "ALSO ON YOUR CALENDAR", "-----------------------------");
+        for (const it of nuldam) t.push(`* ${it.title}`);
+        t.push(`  ${NULDAM_VENUE}, ${NULDAM_ADDRESS}`);
       }
       if (r.additional_attendees) {
-        lines.push("");
-        lines.push(`Badges will be ready for you and ${r.additional_attendees}.`);
+        t.push("", `Badges will be ready for you and ${r.additional_attendees}.`);
       }
-      lines.push("");
-      lines.push("BEFORE YOU COME");
-      lines.push("─────────────────────────────");
-      lines.push("We've opened a Virtual Networking Lounge — an attendee-only wall where you can see who else is joining and stay in touch afterwards:");
-      lines.push(`${SITE}/lounge (enter this email address)`);
-      lines.push("");
-      lines.push("Please add your LinkedIn or a contact link there so others can reach you — it takes a few seconds, no re-registration needed. Only your name, organisation and job title are shown; emails and phone numbers never are.");
-      lines.push("");
-      lines.push(`Need to change anything? Look up your booking with this email at ${SITE}/book`);
-      lines.push("");
-      lines.push("See you on the 2nd.");
-      lines.push("");
-      lines.push("Warm regards,");
-      lines.push("Donghyun Kim");
-      lines.push("Lodestart Pte. Ltd. · on behalf of the KIMST Singapore Connect team");
+      t.push("", "BEFORE YOU COME", "-----------------------------");
+      t.push("We've opened a Virtual Networking Lounge - an attendee-only directory where you can see who else is joining and stay in touch afterwards.");
+      t.push(`${SITE}/lounge`);
+      t.push("Sign in with this email address, then add your LinkedIn so others can reach you. Only your name, organisation and job title are shown - emails and phone numbers never are.", "");
+      t.push(`Need to change anything? Look up your booking at ${SITE}/book`, "");
+      t.push("See you on the 2nd.", "");
+      t.push("Warm regards,", SIGN_NAME, SIGN_ORG);
+
+      // ── html ──
+      const link = (href: string, label: string) =>
+        `<a href="${href}" style="color:#0766EE;text-decoration:underline;">${label}</a>`;
+      const sectionTitle = (label: string) =>
+        `<p style="margin:26px 0 8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0A2163;border-bottom:2px solid #E3EAF6;padding-bottom:6px;">${label}</p>`;
+      const items = (list: ScheduleItem[]) =>
+        list
+          .map(
+            (it) =>
+              `<tr><td style="padding:6px 0;vertical-align:top;width:14px;color:#0766EE;font-weight:700;">•</td>` +
+              `<td style="padding:6px 0;">` +
+              `<span style="font-weight:600;color:#0A2163;">${esc(it.title)}</span>` +
+              (it.detail ? `<br><span style="color:#5A6B87;font-size:14px;">${esc(it.detail)}</span>` : "") +
+              `</td></tr>`,
+          )
+          .join("");
+
+      const h: string[] = [];
+      h.push(
+        `<div style="font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#22314F;max-width:620px;">`,
+      );
+      h.push(`<p style="margin:0 0 14px;">Dear ${esc(r.full_name)},</p>`);
+      h.push(
+        `<p style="margin:0 0 20px;">We're looking forward to welcoming you to the <strong>K-Marine Tech Open Innovation Day</strong> next week.</p>`,
+      );
+      h.push(
+        `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#F2F6FC;border-left:4px solid #0766EE;border-radius:6px;">` +
+          `<tr><td style="padding:14px 18px;">` +
+          `<div style="font-weight:700;color:#0A2163;">Wednesday, 2 September 2026 · 10:00 – 16:00</div>` +
+          `<div style="margin-top:4px;color:#3D4E6E;">${esc(EVENT_VENUE)}</div>` +
+          `<div style="color:#5A6B87;font-size:14px;">${esc(EVENT_ADDRESS)}</div>` +
+          `<div style="margin-top:8px;font-size:14px;">${link(EVENT_MAP_URL, "View on Google Maps →")}</div>` +
+          `</td></tr></table>`,
+      );
+      h.push(sectionTitle("Your schedule"));
+      h.push(`<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">${items(schedule)}</table>`);
+      if (dayMeetings.length === 0) {
+        h.push(
+          `<p style="margin:14px 0 0;padding:12px 14px;background:#FFF8E7;border-radius:6px;font-size:14px;">` +
+            `You haven't booked a 1:1 meeting with the startups yet — a few slots are still open. ` +
+            `${link(`${SITE}/book`, "Book a 1:1 meeting →")}</p>`,
+        );
+      }
+      if (nuldam.length) {
+        h.push(sectionTitle("Also on your calendar"));
+        h.push(`<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">${items(nuldam)}</table>`);
+        h.push(
+          `<p style="margin:8px 0 0;color:#5A6B87;font-size:14px;">${esc(NULDAM_VENUE)}, ${esc(NULDAM_ADDRESS)}</p>`,
+        );
+      }
+      if (r.additional_attendees) {
+        h.push(
+          `<p style="margin:16px 0 0;font-size:14px;">Badges will be ready for you and <strong>${esc(r.additional_attendees)}</strong>.</p>`,
+        );
+      }
+      h.push(sectionTitle("Before you come"));
+      h.push(
+        `<p style="margin:0 0 12px;">We've opened a <strong>Virtual Networking Lounge</strong> — an attendee-only directory where you can see who else is joining and stay in touch afterwards.</p>`,
+      );
+      h.push(
+        `<p style="margin:0 0 14px;">` +
+          `<a href="${SITE}/lounge" style="display:inline-block;background:#0766EE;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 20px;border-radius:999px;">Open the Networking Lounge</a>` +
+          `</p>`,
+      );
+      h.push(
+        `<p style="margin:0 0 18px;font-size:14px;color:#5A6B87;">Sign in with this email address, then add your LinkedIn so others can reach you — it takes a few seconds and no re-registration is needed. Only your name, organisation and job title are shown; emails and phone numbers never are.</p>`,
+      );
+      h.push(
+        `<p style="margin:0 0 22px;font-size:14px;">Need to change anything? ${link(`${SITE}/book`, "Manage your booking")}.</p>`,
+      );
+      h.push(`<p style="margin:0 0 18px;">See you on the 2nd.</p>`);
+      h.push(
+        `<p style="margin:0;padding-top:16px;border-top:1px solid #E3EAF6;font-size:14px;color:#5A6B87;">Warm regards,<br>` +
+          `<strong style="color:#0A2163;">${SIGN_NAME}</strong><br>${SIGN_ORG}</p>`,
+      );
+      h.push(`</div>`);
 
       const tags: string[] = [];
       if (r.attend_showcase) tags.push("Showcase");
       if (r.attend_lunch) tags.push("Lunch");
       if (dayMeetings.length) tags.push(`${dayMeetings.length} meeting${dayMeetings.length > 1 ? "s" : ""}`);
-      if (nuldamMeetings.length) tags.push("Nuldam");
+      if (nuldam.length) tags.push("Nuldam");
       if (!tags.length) tags.push("RSVP only");
 
-      return { email: r.email, name: r.full_name, subject: SUBJECT, body: lines.join("\n"), tags };
+      return { email: r.email, name: r.full_name, subject: SUBJECT, body: t.join("\n"), html: h.join(""), tags };
     });
 }
 
 export function remindersToCsv(reminders: Reminder[]): string {
-  const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
-  const rows = [["email", "name", "subject", "body"].join(",")];
+  const esc2 = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const rows = [["email", "name", "subject", "body", "html"].join(",")];
   for (const r of reminders) {
-    rows.push([esc(r.email), esc(r.name), esc(r.subject), esc(r.body)].join(","));
+    rows.push([esc2(r.email), esc2(r.name), esc2(r.subject), esc2(r.body), esc2(r.html)].join(","));
   }
   return rows.join("\r\n");
 }
