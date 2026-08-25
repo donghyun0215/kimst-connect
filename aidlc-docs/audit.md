@@ -255,3 +255,21 @@ company, as a separate menu on the internal schedule page.
 
 Verified: tsc ✓ build ✓ menu renders ✓ (data path exercises on prod where the
 real service key exists).
+
+---
+
+## 2026-08-25 — Admin: inline lounge-link editing
+
+**Problem:** the organiser was googling attendees and entering LinkedIn URLs
+through the public lounge mini-form, one at a time.
+
+- `AdminRsvp` type gained `contact_url` / `show_in_lounge` (the admin select
+  was already `*`, so only the type lagged).
+- RSVP table gains a "Lounge link" column: paste a URL, save on Enter or blur,
+  with dirty/saving/saved/error states and an "Open link ↗" when set. Reuses
+  the existing `updateContactUrl` server fn (same normalisation, same column
+  the lounge reads) rather than adding a parallel path.
+- Each row carries a Google lookup button pre-filled with name + organisation +
+  "linkedin", so the search step doesn't require retyping.
+
+Verified: tsc ✓ build ✓.

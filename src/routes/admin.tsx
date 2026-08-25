@@ -4,6 +4,7 @@ import { companies } from "@/data/companies";
 import { EVENT_DATE, TIMESLOTS, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_COMPANY_SLUGS, getSlotInfo, isSlotOffered } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
+import { updateContactUrl } from "@/lib/booking.server";
 import { buildReminders, remindersToCsv } from "@/lib/reminders";
 import kimstLogo from "@/assets/kimst-logo.png";
 
@@ -236,6 +237,7 @@ function AdminPage() {
                   <th className="p-3 font-semibold">Sessions</th>
                   <th className="p-3 font-semibold">1:1 meetings</th>
                   <th className="p-3 font-semibold">Interest</th>
+                  <th className="p-3 font-semibold">Lounge link</th>
                   <th className="p-3 font-semibold">Registered</th>
                 </tr>
               </thead>
@@ -281,6 +283,9 @@ function AdminPage() {
                             })}
                       </td>
                       <td className="p-3 text-xs">{r.primary_interest ?? "—"}</td>
+                      <td className="p-3">
+                        <ContactLinkCell rsvp={r} onSaved={() => load(pwRef.current)} />
+                      </td>
                       <td className="p-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
                     </tr>
                   );
@@ -425,6 +430,7 @@ function AdminPage() {
                   <th className="p-3 font-semibold">Session</th>
                   <th className="p-3 font-semibold">Contact</th>
                   <th className="p-3 font-semibold">Interest</th>
+                  <th className="p-3 font-semibold">Lounge link</th>
                   <th className="p-3 font-semibold">Booked</th>
                   <th className="p-3 font-semibold"></th>
                 </tr>
@@ -643,5 +649,83 @@ function ReminderSection({ rsvps, bookings }: { rsvps: AdminRsvp[]; bookings: Ad
         </div>
       )}
     </section>
+  );
+}
+
+// ── Inline contact-link editor ──────────────────────────────────────
+// Paste a LinkedIn (or any) URL straight into the RSVP table; saves to the
+// same column the lounge card reads. A Google lookup link sits alongside so
+// searching for someone doesn't mean retyping their details.
+function ContactLinkCell({ rsvp, onSaved }: { rsvp: AdminRsvp; onSaved: () => void }) {
+  const [value, setValue] = useState(rsvp.contact_url ?? "");
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  useEffect(() => {
+    setValue(rsvp.contact_url ?? "");
+    setState("idle");
+  }, [rsvp.contact_url]);
+
+  const dirty = value.trim() !== (rsvp.contact_url ?? "");
+
+  const save = async () => {
+    if (!dirty || state === "saving") return;
+    setState("saving");
+    const res = await updateContactUrl({ data: { email: rsvp.email, contactUrl: value.trim() } });
+    if (res.ok) {
+      setState("saved");
+      onSaved();
+      setTimeout(() => setState((s) => (s === "saved" ? "idle" : s)), 1500);
+    } else {
+      setState("error");
+    }
+  };
+
+  const query = encodeURIComponent(`${rsvp.full_name} ${rsvp.organisation} linkedin`);
+
+  return (
+    <div className="min-w-[210px]">
+      <div className="flex items-center gap-1.5">
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={() => void save()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void save();
+            if (e.key === "Escape") setValue(rsvp.contact_url ?? "");
+          }}
+          placeholder="Paste LinkedIn URL"
+          className={`w-full rounded-md border px-2 py-1.5 text-xs outline-none transition ${
+            state === "error"
+              ? "border-red-400 bg-red-50"
+              : dirty
+                ? "border-primary bg-primary/5"
+                : "border-input bg-background"
+          }`}
+        />
+        <a
+          href={`https://www.google.com/search?q=${query}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Search this person on Google"
+          className="shrink-0 rounded-md border border-border px-2 py-1.5 text-xs font-semibold text-navy transition hover:bg-muted"
+        >
+          🔍
+        </a>
+      </div>
+      <div className="mt-1 flex items-center gap-2 text-[10px]">
+        {state === "saving" && <span className="text-muted-foreground">Saving…</span>}
+        {state === "saved" && <span className="font-semibold text-green-700">Saved ✓</span>}
+        {state === "error" && <span className="font-semibold text-red-600">Failed — retry</span>}
+        {state === "idle" && dirty && <span className="text-primary">Enter or click away to save</span>}
+        {state === "idle" && !dirty && rsvp.contact_url && (
+          <a href={rsvp.contact_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+            Open link ↗
+          </a>
+        )}
+        {state === "idle" && !dirty && !rsvp.contact_url && (
+          <span className="text-muted-foreground/70">No link yet</span>
+        )}
+      </div>
+    </div>
   );
 }

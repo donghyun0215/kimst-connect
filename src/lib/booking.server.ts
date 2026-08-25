@@ -396,6 +396,8 @@ export interface AdminRsvp {
   primary_interest: string | null;
   notes: string | null;
   additional_attendees: string | null;
+  contact_url: string | null;
+  show_in_lounge: boolean;
   attend_showcase: boolean;
   attend_lunch: boolean;
   attend_meetups: boolean;
