@@ -33,6 +33,26 @@ const SIGN_ORG = "Vice President, KOCHAM Singapore";
 
 const DAY_SLOT_IDS = new Set(TIMESLOTS.map((t) => t.id));
 
+// Personalised "Add to Google Calendar" link for the main event day.
+// Each attendee's own schedule is embedded in the event description.
+function gcalUrl(schedule: ScheduleItem[]): string {
+  const details = [
+    "Your schedule:",
+    ...schedule.map((it) => `• ${it.title}`),
+    "",
+    `Manage your booking: ${SITE}/book`,
+  ].join("\n");
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: "K-Marine Tech Open Innovation Day",
+    dates: "20260902T100000/20260902T160000",
+    ctz: "Asia/Singapore",
+    location: `${EVENT_VENUE}, ${EVENT_ADDRESS}`,
+    details,
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 function programTime(id: "showcase" | "lunch" | "meetups"): string {
   return PROGRAM.find((b) => b.id === id)?.time ?? "";
 }
@@ -99,7 +119,8 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
       t.push("Wednesday, 2 September 2026 | 10:00 - 16:00");
       t.push(EVENT_VENUE);
       t.push(EVENT_ADDRESS);
-      t.push(`Google Maps: ${EVENT_MAP_URL}`, "");
+      t.push(`Google Maps: ${EVENT_MAP_URL}`);
+      t.push(`Add to Google Calendar: ${gcalUrl(schedule)}`, "");
       t.push("YOUR SCHEDULE", "-----------------------------");
       for (const it of schedule) {
         t.push(`* ${it.title}`);
@@ -164,6 +185,9 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
           `<div style="margin-top:4px;color:#3D4E6E;">${esc(EVENT_VENUE)}</div>` +
           `<div style="color:#5A6B87;font-size:14px;">${esc(EVENT_ADDRESS)}</div>` +
           `<div style="margin-top:8px;font-size:14px;">${link(EVENT_MAP_URL, "View on Google Maps →")}</div>` +
+          `<div style="margin-top:12px;">` +
+          `<a href="${gcalUrl(schedule).replace(/&/g, "&amp;")}" style="display:inline-block;background:#0766EE;color:#FFFFFF;font-weight:600;font-size:14px;padding:9px 16px;border-radius:6px;text-decoration:none;">📅&nbsp; Add to Google Calendar</a>` +
+          `</div>` +
           `</td></tr></table>`,
       );
       h.push(sectionTitle("Your schedule"));
