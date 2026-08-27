@@ -186,7 +186,7 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
           `<div style="color:#5A6B87;font-size:14px;">${esc(EVENT_ADDRESS)}</div>` +
           `<div style="margin-top:8px;font-size:14px;">${link(EVENT_MAP_URL, "View on Google Maps →")}</div>` +
           `<div style="margin-top:12px;">` +
-          `<a href="${gcalUrl(schedule).replace(/&/g, "&amp;")}" style="display:inline-block;background:#0766EE;color:#FFFFFF;font-weight:600;font-size:14px;padding:9px 16px;border-radius:6px;text-decoration:none;">📅&nbsp; Add to Google Calendar</a>` +
+          `<a href="${gcalUrl(schedule).replace(/&/g, "&amp;")}" style="display:inline-block;background:#0766EE;color:#FFFFFF;font-weight:600;font-size:14px;padding:9px 16px;border-radius:6px;text-decoration:none;">Add to Google Calendar →</a>` +
           `</div>` +
           `</td></tr></table>`,
       );
