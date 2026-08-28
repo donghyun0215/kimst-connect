@@ -29,7 +29,7 @@ const SUBJECT = "Your schedule — K-Marine Tech Open Innovation Day, 2 Sep";
 
 // Change the sender block here if someone else signs the mailout.
 const SIGN_NAME = "Tammy Ahn";
-const SIGN_ORG = "Vice President, KOCHAM Singapore";
+const SIGN_ORG = "on behalf of KIMST";
 
 const DAY_SLOT_IDS = new Set(TIMESLOTS.map((t) => t.id));
 
