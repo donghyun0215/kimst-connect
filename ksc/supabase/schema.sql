@@ -114,3 +114,37 @@ end $$;
 -- ── verification queries (optional) ─────────────────────────────
 -- select * from public.bookings order by created_at desc;
 -- select * from public.booking_events order by created_at desc;
+
+-- ── networking lounge (2026-08) ─────────────────────────────────
+-- additional_attendees repairs earlier drift: the column was added by hand in
+-- production (Aug 2026) but never recorded here. contact_url holds any
+-- professional link (LinkedIn / website / open-chat) shown on the attendee's
+-- lounge card; show_in_lounge lets an attendee opt out of the wall.
+alter table public.rsvps add column if not exists additional_attendees text;
+alter table public.rsvps add column if not exists contact_url text;
+alter table public.rsvps add column if not exists show_in_lounge boolean not null default true;
+
+-- ── attendance check-in + my-contacts wallet (2026-08-30) ───────
+-- checked_in_at is set when an attendee enters the lounge through the
+-- on-site QR (key + email together — remote email-only entry never counts),
+-- or toggled manually from /admin. checked_in_via records which.
+alter table public.rsvps add column if not exists checked_in_at timestamptz;
+alter table public.rsvps add column if not exists checked_in_via text; -- 'qr' | 'manual'
+
+-- Per-attendee saved contacts ("내 명함집"). 1:1 meeting partners are
+-- computed live from bookings and never stored here; this table holds only
+-- manual additions and user-entered email/phone notes. Email visibility of
+-- other attendees is enforced server-side: revealed only between pairs with
+-- an actual booking connection.
+create table if not exists public.lounge_contacts (
+  id uuid primary key default gen_random_uuid(),
+  owner_email text not null,
+  contact_rsvp_id uuid not null references public.rsvps(id) on delete cascade,
+  contact_email text,
+  contact_phone text,
+  source text not null default 'manual', -- 'meeting' | 'manual'
+  created_at timestamptz not null default now(),
+  unique (owner_email, contact_rsvp_id)
+);
+alter table public.lounge_contacts enable row level security;
+grant select, insert, update, delete on public.lounge_contacts to service_role;

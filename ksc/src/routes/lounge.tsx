@@ -7,7 +7,13 @@ import loungeFooterArt from "@/assets/lounge-footer-art.png";
 import {
   listLoungeProfiles,
   updateContactUrl,
+  markLoungeCheckIn,
+  listMyContacts,
+  addLoungeContact,
+  removeLoungeContact,
+  saveLoungeContactInfo,
   type LoungeProfile,
+  type WalletEntry,
 } from "@/lib/booking.server";
 
 // Unlisted attendee wall — QR (?key=) on event day, RSVP-email gate after.
@@ -151,10 +157,29 @@ function LoungePage() {
   const [cMsg, setCMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [cBusy, setCBusy] = useState(false);
 
+  // My Contacts wallet ("내 명함집")
+  const [view, setView] = useState<"all" | "mine">("all");
+  const [wallet, setWallet] = useState<WalletEntry[] | null>(null);
+  const [walletSelected, setWalletSelected] = useState<WalletEntry | null>(null);
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+
+  const refreshWallet = async (ownerEmail: string) => {
+    const res = await listMyContacts({ data: { email: ownerEmail } });
+    if (res.ok) {
+      setWallet(res.entries);
+      setAddedIds(new Set(res.entries.map((e) => e.rsvp_id)));
+    }
+  };
+
   // Any registered RSVP email enters, any time: the lounge URL is not
   // advertised to general attendees before the event (reminder emails omit
   // it), so a date lock only added friction for the startups and staff who
   // already hold the QR. Owner's call, 26 Aug.
+  //
+  // Entering through the on-site QR (key) now ALSO requires the email — the
+  // entrance desk hands out badges only after seeing the lounge open, and
+  // key+email together is what marks real attendance in the DB. Email-only
+  // remote entry never checks anyone in.
   const load = async (auth: { key?: string; email?: string }) => {
     setLoading(true);
     setGateError("");
@@ -162,12 +187,16 @@ function LoungePage() {
     setLoading(false);
     if (res.ok) {
       setProfiles(res.profiles);
-      if (auth.email) setGrantedEmail(auth.email);
+      if (auth.email) {
+        setGrantedEmail(auth.email);
+        void refreshWallet(auth.email);
+        if (auth.key) void markLoungeCheckIn({ data: { key: auth.key, email: auth.email } });
+      }
     } else {
       setProfiles(null);
       setGateError(
         auth.key
-          ? "This access link is no longer active. Enter the email you used to RSVP instead."
+          ? "No RSVP found with this email — please RSVP first, then come back in."
           : "No RSVP found with this email — please RSVP first, then come back in.",
       );
     }
@@ -282,52 +311,38 @@ function LoungePage() {
                     partners in the marine tech ecosystem.
                   </p>
 
-                  {/* gate card */}
+                  {/* gate card — email is always required; the QR key on top
+                      of it is what marks on-site attendance */}
                   <div className="mt-7 max-w-md rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5">
-                    {key && !gateError ? (
-                      <>
-                        <div className="text-sm font-bold text-white">You're verified via the event QR</div>
-                        <button
-                          type="button"
-                          disabled={loading}
-                          onClick={() => void load({ key })}
-                          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
-                        >
-                          {loading ? "Opening…" : "Enter the lounge"}
-                          <span aria-hidden="true">→</span>
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-sm font-bold text-white">To enter the lounge, input your email</div>
-                        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                          <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && email.trim() && void load({ email: email.trim() })}
-                            placeholder="Enter your email address"
-                            className="min-w-0 flex-1 rounded-lg border border-white/30 bg-white px-3 py-2.5 text-base text-navy placeholder:text-slate-400 sm:text-sm"
-                          />
-                          <button
-                            type="button"
-                            disabled={!email.trim() || loading}
-                            onClick={() => void load({ email: email.trim() })}
-                            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
-                          >
-                            {loading ? "Checking…" : "Enter lounge"}
-                            {!loading && <span aria-hidden="true">→</span>}
-                          </button>
-                        </div>
-                        {gateError && (
-                          <p className="mt-2.5 text-xs leading-relaxed text-rose-200">
-                            {gateError}{" "}
-                            <a href="/book" className="font-semibold text-white underline underline-offset-2">
-                              RSVP here →
-                            </a>
-                          </p>
-                        )}
-                      </>
+                    <div className="text-sm font-bold text-white">
+                      {key ? "You're at the event — enter your RSVP email to check in" : "To enter the lounge, input your email"}
+                    </div>
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && email.trim() && void load(key ? { key, email: email.trim() } : { email: email.trim() })}
+                        placeholder="Enter your email address"
+                        className="min-w-0 flex-1 rounded-lg border border-white/30 bg-white px-3 py-2.5 text-base text-navy placeholder:text-slate-400 sm:text-sm"
+                      />
+                      <button
+                        type="button"
+                        disabled={!email.trim() || loading}
+                        onClick={() => void load(key ? { key, email: email.trim() } : { email: email.trim() })}
+                        className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
+                      >
+                        {loading ? "Checking…" : "Enter lounge"}
+                        {!loading && <span aria-hidden="true">→</span>}
+                      </button>
+                    </div>
+                    {gateError && (
+                      <p className="mt-2.5 text-xs leading-relaxed text-rose-200">
+                        {gateError}{" "}
+                        <a href="/book" className="font-semibold text-white underline underline-offset-2">
+                          RSVP here →
+                        </a>
+                      </p>
                     )}
                     <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-sky-100/80">
                       <LockGlyph className="mt-0.5 h-3 w-3 shrink-0" />
@@ -591,6 +606,40 @@ function LoungePage() {
 
             {/* ── card wall ─────────────────────────────── */}
             <section className="mt-6 lg:mt-0">
+              {grantedEmail && (
+                <div className="mb-4 inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setView("all")}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      view === "all" ? "bg-navy text-white" : "text-navy hover:bg-muted"
+                    }`}
+                  >
+                    Everyone
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setView("mine");
+                      if (grantedEmail) void refreshWallet(grantedEmail);
+                    }}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      view === "mine" ? "bg-navy text-white" : "text-navy hover:bg-muted"
+                    }`}
+                  >
+                    My Contacts{wallet?.length ? ` (${wallet.length})` : ""}
+                  </button>
+                </div>
+              )}
+
+              {view === "mine" && grantedEmail ? (
+                <MyContactsWall
+                  wallet={wallet}
+                  onSelect={setWalletSelected}
+                  onBrowseAll={() => setView("all")}
+                />
+              ) : (
+                <>
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="font-display text-xl font-bold text-navy lg:hidden">Attendees</h2>
                 <p className="text-xs text-muted-foreground">
@@ -683,12 +732,14 @@ function LoungePage() {
               )}
 
               <p className="mt-8 text-center text-[11px] leading-relaxed text-muted-foreground">
-                Visible to event attendees only · emails and phone numbers are never shown · to
-                update or remove your card, contact{" "}
+                Visible to event attendees only · emails are shared only between confirmed 1:1
+                meeting partners inside My Contacts · to update or remove your card, contact{" "}
                 <a href="mailto:support@lodestart.ai" className="font-medium text-primary hover:underline">
                   support@lodestart.ai
                 </a>
               </p>
+                </>
+              )}
             </section>
           </div>
         )}
@@ -756,9 +807,41 @@ function LoungePage() {
                     No contact link added yet
                   </p>
                 )}
+                {grantedEmail && (
+                  <button
+                    type="button"
+                    disabled={addedIds.has(selected.id)}
+                    onClick={() => {
+                      void addLoungeContact({ data: { ownerEmail: grantedEmail, contactRsvpId: selected.id } }).then(
+                        (r) => {
+                          if (r.ok) {
+                            setAddedIds((s) => new Set(s).add(selected.id));
+                            void refreshWallet(grantedEmail);
+                          }
+                        },
+                      );
+                    }}
+                    className="mt-1 flex w-full items-center justify-center gap-2 rounded-full border border-border py-2.5 text-sm font-semibold text-navy transition hover:bg-muted disabled:opacity-60"
+                  >
+                    {addedIds.has(selected.id) ? "✓ In My Contacts" : "＋ Add to My Contacts"}
+                  </button>
+                )}
               </div>
             </div>
           </div>
+        )}
+
+        {walletSelected && grantedEmail && (
+          <WalletCardModal
+            entry={walletSelected}
+            ownerEmail={grantedEmail}
+            onClose={() => setWalletSelected(null)}
+            onChanged={() => void refreshWallet(grantedEmail)}
+            onRemoved={() => {
+              setWalletSelected(null);
+              void refreshWallet(grantedEmail);
+            }}
+          />
         )}
 
         {profiles && (
@@ -767,6 +850,240 @@ function LoungePage() {
           </footer>
         )}
       </main>
+    </div>
+  );
+}
+
+// ── My Contacts ("내 명함집") ─────────────────────────────────────
+// Personal follow-up wallet: 1:1 meeting partners appear automatically
+// (computed from bookings server-side), everyone else is added by hand from
+// the wall. Cards open a small editable template — email/phone the owner
+// types here is private to them.
+
+function MyContactsWall({
+  wallet,
+  onSelect,
+  onBrowseAll,
+}: {
+  wallet: WalletEntry[] | null;
+  onSelect: (e: WalletEntry) => void;
+  onBrowseAll: () => void;
+}) {
+  if (!wallet) {
+    return <p className="mt-6 text-center text-sm text-muted-foreground">Loading your contacts…</p>;
+  }
+  if (wallet.length === 0) {
+    return (
+      <div className="mt-4 rounded-2xl border border-dashed border-border bg-card/60 p-10 text-center">
+        <p className="text-sm font-semibold text-navy">No contacts saved yet</p>
+        <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
+          People you meet in a 1:1 session appear here automatically. You can also add anyone from
+          the attendee wall — open their card and tap “Add to My Contacts”.
+        </p>
+        <button
+          type="button"
+          onClick={onBrowseAll}
+          className="mt-4 rounded-full border border-border px-4 py-2 text-xs font-semibold text-navy transition hover:bg-muted"
+        >
+          Browse attendees
+        </button>
+      </div>
+    );
+  }
+  const meetings = wallet.filter((w) => w.source === "meeting").length;
+  return (
+    <>
+      <p className="text-xs text-muted-foreground">
+        {wallet.length} saved{meetings ? ` · ${meetings} from your 1:1 meetings` : ""} · visible only to you
+      </p>
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+        {wallet.map((w) => (
+          <button
+            key={w.rsvp_id}
+            type="button"
+            onClick={() => onSelect(w)}
+            className="group flex flex-col rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-5"
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-white"
+                style={{ backgroundColor: avatarColor(w.full_name) }}
+              >
+                {initials(w.full_name)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-bold text-navy">{w.full_name}</div>
+                <div className="line-clamp-2 break-words text-xs leading-snug text-muted-foreground">{w.job_title}</div>
+                <div className="mt-0.5 truncate text-xs font-medium text-navy/60">{w.organisation}</div>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-1 items-end justify-between gap-2">
+              {w.source === "meeting" ? (
+                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                  1:1 meeting
+                </span>
+              ) : (
+                <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-navy ring-1 ring-inset ring-border">
+                  Saved
+                </span>
+              )}
+              <span className="shrink-0 text-[10px] text-muted-foreground opacity-0 transition group-hover:opacity-100">
+                Open →
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function WalletCardModal({
+  entry,
+  ownerEmail,
+  onClose,
+  onChanged,
+  onRemoved,
+}: {
+  entry: WalletEntry;
+  ownerEmail: string;
+  onClose: () => void;
+  onChanged: () => void;
+  onRemoved: () => void;
+}) {
+  const [wEmail, setWEmail] = useState(entry.saved_email ?? "");
+  const [wPhone, setWPhone] = useState(entry.saved_phone ?? "");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const save = async () => {
+    if (busy) return;
+    setBusy(true);
+    setMsg(null);
+    const res = await saveLoungeContactInfo({
+      data: { ownerEmail, contactRsvpId: entry.rsvp_id, email: wEmail, phone: wPhone },
+    });
+    setBusy(false);
+    setMsg(res.ok ? "Saved." : "Couldn't save — try again.");
+    if (res.ok) onChanged();
+  };
+
+  const remove = async () => {
+    if (busy) return;
+    setBusy(true);
+    const res = await removeLoungeContact({ data: { ownerEmail, contactRsvpId: entry.rsvp_id } });
+    setBusy(false);
+    if (res.ok) onRemoved();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card shadow-xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative bg-secondary/60 px-6 pb-6 pt-8 text-center">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground transition hover:bg-background hover:text-navy"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+          <div
+            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full text-xl font-bold text-white ring-4 ring-background"
+            style={{ backgroundColor: avatarColor(entry.full_name) }}
+          >
+            {initials(entry.full_name)}
+          </div>
+          <div className="mt-3 text-lg font-bold text-navy">{entry.full_name}</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {entry.job_title} · {entry.organisation}
+          </div>
+          {entry.source === "meeting" && (
+            <span className="mt-2 inline-block rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+              Met in a 1:1 meeting
+            </span>
+          )}
+        </div>
+        <div className="space-y-3 px-6 py-5">
+          {entry.meeting_email && (
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Email</div>
+              <a
+                href={`mailto:${entry.meeting_email}`}
+                className="mt-0.5 block break-all text-sm font-semibold text-primary hover:underline"
+              >
+                {entry.meeting_email}
+              </a>
+              <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
+                Shared because you two had a confirmed 1:1 meeting.
+              </p>
+            </div>
+          )}
+          {entry.contact_url && (
+            <a
+              href={entry.contact_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-navy py-2.5 text-sm font-semibold text-white transition hover:bg-navy/85"
+            >
+              <LinkIcon className="h-4 w-4" />
+              Connect on {contactLabel(entry.contact_url)}
+            </a>
+          )}
+
+          <div className="rounded-xl border border-border bg-secondary/40 p-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              My notes — only I can see these
+            </div>
+            <div className="mt-2 space-y-2">
+              <input
+                type="email"
+                value={wEmail}
+                onChange={(e) => setWEmail(e.target.value)}
+                placeholder={entry.meeting_email ? "Alternative email (optional)" : "Their email (optional)"}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-primary/30 transition focus:ring-2"
+              />
+              <input
+                type="tel"
+                value={wPhone}
+                onChange={(e) => setWPhone(e.target.value)}
+                placeholder="Their phone (optional)"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-primary/30 transition focus:ring-2"
+              />
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void save()}
+                  className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {busy ? "Saving…" : "Save"}
+                </button>
+                {msg && <span className="text-[11px] text-muted-foreground">{msg}</span>}
+              </div>
+            </div>
+          </div>
+
+          {entry.source === "manual" && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void remove()}
+              className="w-full rounded-full border border-border py-2 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-rose-600"
+            >
+              Remove from My Contacts
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

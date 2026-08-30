@@ -4,7 +4,7 @@ import { companies } from "@/data/companies";
 import { EVENT_DATE, TIMESLOTS, NULDAM_TRACKS, NULDAM_VENUE, NULDAM_COMPANY_SLUGS, getSlotInfo, isSlotOffered } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
-import { updateContactUrl } from "@/lib/booking.server";
+import { updateContactUrl, adminSetCheckedIn } from "@/lib/booking.server";
 import { buildReminders, remindersToCsv } from "@/lib/reminders";
 import kimstLogo from "@/assets/kimst-logo.png";
 
@@ -209,6 +209,7 @@ function AdminPage() {
         {/* STATS */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <Stat label="Total RSVPs" value={`${rsvps.length}${totalGuests ? ` (+${totalGuests} guests)` : ""}`} />
+          <Stat label="Checked in" value={`${rsvps.filter((r) => r.checked_in_at).length} / ${rsvps.length}`} />
           <Stat label="Showcase" value={`${rsvps.filter((r) => r.attend_showcase).length}`} />
           <Stat label="Lunch (catering)" value={`${rsvps.filter((r) => r.attend_lunch).length}`} />
           <Stat label="1:1 attendees" value={`${rsvps.filter((r) => r.attend_meetups).length}`} />
@@ -220,7 +221,16 @@ function AdminPage() {
         <ReminderSection rsvps={rsvps} bookings={bookings} />
 
         {/* RSVP TABLE */}
-        <h2 className="mt-10 text-lg font-bold text-navy">RSVPs ({rsvps.length})</h2>
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-navy">RSVPs ({rsvps.length})</h2>
+          <button
+            onClick={() => downloadOutreachCsv(rsvps)}
+            className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-navy hover:bg-muted"
+            title="Same column set as the Lodestart outreach DB — re-upload upserts by email"
+          >
+            Export Outreach CSV
+          </button>
+        </div>
         <p className="text-sm text-muted-foreground">Everyone who registered, with the sessions they'll attend.</p>
         {rsvps.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
@@ -231,6 +241,7 @@ function AdminPage() {
             <table className="w-full min-w-[860px] border-collapse text-sm">
               <thead>
                 <tr className="bg-secondary text-left text-navy">
+                  <th className="p-3 font-semibold">Checked in</th>
                   <th className="p-3 font-semibold">Name</th>
                   <th className="p-3 font-semibold">Organisation</th>
                   <th className="p-3 font-semibold">Contact</th>
@@ -246,6 +257,9 @@ function AdminPage() {
                   const myMeetings = bookings.filter((b) => b.email === r.email);
                   return (
                     <tr key={r.id} className="border-t border-border align-top">
+                      <td className="p-3">
+                        <CheckInCell rsvp={r} password={pwRef.current} onSaved={() => load(pwRef.current)} />
+                      </td>
                       <td className="p-3 font-semibold text-navy">
                         {r.full_name}
                         <div className="text-xs font-normal text-muted-foreground">{r.job_title}</div>
@@ -557,6 +571,70 @@ function eventStyle(type: BookingEvent["event_type"]) {
         badge: "bg-red-600 text-white",
       };
   }
+}
+
+// Attendance toggle. Green tick = physically at the event (QR check-in or
+// staff override). Clicking flips it — 'manual' via, so QR-vs-desk stays
+// distinguishable in the DB.
+function CheckInCell({ rsvp, password, onSaved }: { rsvp: AdminRsvp; password: string; onSaved: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const checked = Boolean(rsvp.checked_in_at);
+  const toggle = async () => {
+    if (busy) return;
+    setBusy(true);
+    const res = await adminSetCheckedIn({ data: { password, rsvpId: rsvp.id, checked: !checked } });
+    setBusy(false);
+    if (res.ok) onSaved();
+  };
+  return (
+    <button
+      onClick={() => void toggle()}
+      disabled={busy}
+      title={
+        checked
+          ? `Checked in ${new Date(rsvp.checked_in_at as string).toLocaleTimeString()} (${rsvp.checked_in_via ?? "?"}) — click to undo`
+          : "Not checked in — click to mark as attended"
+      }
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ring-1 ring-inset transition disabled:opacity-50 ${
+        checked
+          ? "bg-emerald-50 text-emerald-700 ring-emerald-600/30 hover:bg-emerald-100"
+          : "bg-secondary text-muted-foreground ring-border hover:bg-muted"
+      }`}
+    >
+      {checked ? "✓ Here" : "—"}
+      {checked && rsvp.checked_in_via === "qr" && <span className="text-[9px] font-normal">QR</span>}
+    </button>
+  );
+}
+
+// Outreach DB handoff. Exact column set the Lodestart outreach tool imports
+// (contacts tab, upsert-by-email): email, org, person, title, country, type,
+// notes, sendable. Event dumps go in as UNCLASSIFIED per the taxonomy — Tammy
+// sorts them into buckets afterwards. LinkedIn/interest/attendance travel in
+// notes so nothing collected here is lost on the way over.
+function downloadOutreachCsv(rsvps: AdminRsvp[]) {
+  const esc = (v: string | null | undefined) => {
+    const s = v ?? "";
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = "email,org,person,title,country,type,notes,sendable";
+  const lines = rsvps.map((r) => {
+    const notes = [
+      "KIMST Singapore Connect 2026-09-02",
+      r.primary_interest || null,
+      r.contact_url || null,
+      r.checked_in_at ? "attended" : "no-show",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    return [r.email, r.organisation, r.full_name, r.job_title, "", "UNCLASSIFIED", notes, "YES"].map(esc).join(",");
+  });
+  const blob = new Blob(["\ufeff" + header + "\r\n" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `kimst-outreach-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

@@ -401,6 +401,8 @@ export interface AdminRsvp {
   attend_showcase: boolean;
   attend_lunch: boolean;
   attend_meetups: boolean;
+  checked_in_at: string | null;
+  checked_in_via: string | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -554,3 +556,253 @@ export const fetchMeetingRoster = createServerFn({ method: "GET" }).handler(
     return { entries };
   },
 );
+
+// ── Attendance check-in (2026-08-30) ───────────────────────────────
+// Only the on-site QR proves physical presence: check-in requires BOTH the
+// lounge key (printed at the entrance desk) and a registered email. Remote
+// email-only lounge entry never marks attendance. Idempotent — the first
+// scan wins and later entries don't overwrite the timestamp.
+export const markLoungeCheckIn = createServerFn({ method: "POST" })
+  .validator((data: { key: string; email: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    if (!LOUNGE_ACCESS_KEY || data.key !== LOUNGE_ACCESS_KEY) return { ok: false };
+    const email = data.email?.toLowerCase().trim();
+    if (!email) return { ok: false };
+    const { error } = await supabaseAdmin
+      .from("rsvps")
+      .update({ checked_in_at: new Date().toISOString(), checked_in_via: "qr" })
+      .eq("email", email)
+      .is("checked_in_at", null);
+    if (error) {
+      console.error("markLoungeCheckIn error:", error);
+      return { ok: false };
+    }
+    return { ok: true };
+  });
+
+// Manual override from /admin — staff can check people in (walk-ups whose
+// phone died) or undo a mistaken check-in.
+export const adminSetCheckedIn = createServerFn({ method: "POST" })
+  .validator((data: { password: string; rsvpId: string; checked: boolean }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    if (data.password !== ADMIN_PASSWORD) return { ok: false };
+    const patch = data.checked
+      ? { checked_in_at: new Date().toISOString(), checked_in_via: "manual" }
+      : { checked_in_at: null, checked_in_via: null };
+    const { error } = await supabaseAdmin.from("rsvps").update(patch).eq("id", data.rsvpId);
+    if (error) {
+      console.error("adminSetCheckedIn error:", error);
+      return { ok: false };
+    }
+    return { ok: true };
+  });
+
+// ── My Contacts wallet ("내 명함집") ────────────────────────────────
+// 1:1 meeting partners are derived live from bookings — the source of truth
+// stays in one place and pre-event cancellations never leave stale wallet
+// rows. lounge_contacts stores only manual additions and the owner's own
+// email/phone notes. Counterpart emails are revealed ONLY between pairs the
+// bookings table actually connects; everyone else stays email-free exactly
+// like the lounge wall.
+
+// RSVP organisation strings are free-typed, so map each startup slug to the
+// spellings seen in production data (normalised: lowercase, alphanumerics
+// only). "WISE BIO Inc." → ys-bio etc.
+const COMPANY_ORG_ALIASES: Record<string, string[]> = {
+  cutshion: ["cutshion"],
+  doublt: ["doublt", "doublet"],
+  willog: ["willog"],
+  xylolabs: ["xylolabs", "xylolab"],
+  "eastsea-brother": ["eastseabrother", "eastseabro"],
+  "haesong-snt": ["haesongsnt", "haesongst", "haesong"],
+  "contrau-eco": ["contraueco", "contrau"],
+  "ys-bio": ["ysbio", "wisebio", "wisebioinc", "wisebioink"],
+};
+
+function normOrg(s: string): string {
+  return (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function slugForOrg(org: string): string | null {
+  const n = normOrg(org);
+  if (!n) return null;
+  for (const [slug, aliases] of Object.entries(COMPANY_ORG_ALIASES)) {
+    if (aliases.some((a) => n === a || n.startsWith(a))) return slug;
+  }
+  return null;
+}
+
+export interface WalletEntry {
+  rsvp_id: string;
+  full_name: string;
+  organisation: string;
+  job_title: string;
+  primary_interest: string | null;
+  contact_url: string | null;
+  source: "meeting" | "manual";
+  /** Counterpart's RSVP email — present only for booking-connected pairs. */
+  meeting_email: string | null;
+  saved_email: string | null;
+  saved_phone: string | null;
+}
+
+async function meetingPartnerIds(ownerEmail: string, ownerOrg: string): Promise<Set<string>> {
+  const ids = new Set<string>();
+  const ownerSlug = slugForOrg(ownerOrg);
+
+  // Attendee side: companies I booked → people from those startups.
+  const { data: myBookings } = await supabaseAdmin
+    .from("bookings")
+    .select("company_id")
+    .eq("email", ownerEmail);
+  const bookedSlugs = new Set((myBookings ?? []).map((b) => String(b.company_id)));
+
+  if (bookedSlugs.size || ownerSlug) {
+    const { data: allRsvps } = await supabaseAdmin
+      .from("rsvps")
+      .select("id, email, organisation, show_in_lounge");
+
+    if (bookedSlugs.size) {
+      for (const r of allRsvps ?? []) {
+        const s = slugForOrg(String(r.organisation));
+        if (s && bookedSlugs.has(s) && String(r.email).toLowerCase() !== ownerEmail) ids.add(String(r.id));
+      }
+    }
+
+    // Startup side: people who booked my company.
+    if (ownerSlug) {
+      const { data: theirBookings } = await supabaseAdmin
+        .from("bookings")
+        .select("email")
+        .eq("company_id", ownerSlug);
+      const partnerEmails = new Set((theirBookings ?? []).map((b) => String(b.email).toLowerCase()));
+      for (const r of allRsvps ?? []) {
+        if (partnerEmails.has(String(r.email).toLowerCase()) && String(r.email).toLowerCase() !== ownerEmail)
+          ids.add(String(r.id));
+      }
+    }
+  }
+  return ids;
+}
+
+export const listMyContacts = createServerFn({ method: "POST" })
+  .validator((data: { email: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: true; entries: WalletEntry[] } | { ok: false }> => {
+    const email = data.email?.toLowerCase().trim();
+    if (!email) return { ok: false };
+    const { data: owner } = await supabaseAdmin
+      .from("rsvps")
+      .select("id, organisation")
+      .eq("email", email)
+      .maybeSingle();
+    if (!owner) return { ok: false };
+
+    const partnerIds = await meetingPartnerIds(email, String(owner.organisation));
+
+    const { data: saved } = await supabaseAdmin
+      .from("lounge_contacts")
+      .select("contact_rsvp_id, contact_email, contact_phone")
+      .eq("owner_email", email);
+    const savedMap = new Map(
+      (saved ?? []).map((s) => [String(s.contact_rsvp_id), { e: s.contact_email, p: s.contact_phone }]),
+    );
+
+    const wantedIds = new Set([...partnerIds, ...savedMap.keys()]);
+    if (!wantedIds.size) return { ok: true, entries: [] };
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("rsvps")
+      .select("id, full_name, organisation, job_title, primary_interest, contact_url, email")
+      .in("id", [...wantedIds]);
+    if (error) {
+      console.error("listMyContacts error:", error);
+      return { ok: false };
+    }
+
+    const entries: WalletEntry[] = (rows ?? [])
+      .map((r) => {
+        const isMeeting = partnerIds.has(String(r.id));
+        const s = savedMap.get(String(r.id));
+        return {
+          rsvp_id: String(r.id),
+          full_name: r.full_name,
+          organisation: r.organisation,
+          job_title: r.job_title,
+          primary_interest: r.primary_interest,
+          contact_url: r.contact_url,
+          source: (isMeeting ? "meeting" : "manual") as WalletEntry["source"],
+          meeting_email: isMeeting ? String(r.email) : null,
+          saved_email: s?.e ?? null,
+          saved_phone: s?.p ?? null,
+        };
+      })
+      .sort((a, b) => (a.source === b.source ? a.full_name.localeCompare(b.full_name) : a.source === "meeting" ? -1 : 1));
+    return { ok: true, entries };
+  });
+
+export const addLoungeContact = createServerFn({ method: "POST" })
+  .validator((data: { ownerEmail: string; contactRsvpId: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const email = data.ownerEmail?.toLowerCase().trim();
+    if (!email || !data.contactRsvpId) return { ok: false };
+    const { data: owner } = await supabaseAdmin.from("rsvps").select("id").eq("email", email).maybeSingle();
+    if (!owner) return { ok: false };
+    const { error } = await supabaseAdmin
+      .from("lounge_contacts")
+      .upsert(
+        { owner_email: email, contact_rsvp_id: data.contactRsvpId, source: "manual" },
+        { onConflict: "owner_email,contact_rsvp_id", ignoreDuplicates: true },
+      );
+    if (error) {
+      console.error("addLoungeContact error:", error);
+      return { ok: false };
+    }
+    return { ok: true };
+  });
+
+export const removeLoungeContact = createServerFn({ method: "POST" })
+  .validator((data: { ownerEmail: string; contactRsvpId: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const email = data.ownerEmail?.toLowerCase().trim();
+    if (!email || !data.contactRsvpId) return { ok: false };
+    const { error } = await supabaseAdmin
+      .from("lounge_contacts")
+      .delete()
+      .eq("owner_email", email)
+      .eq("contact_rsvp_id", data.contactRsvpId);
+    if (error) {
+      console.error("removeLoungeContact error:", error);
+      return { ok: false };
+    }
+    return { ok: true };
+  });
+
+export const saveLoungeContactInfo = createServerFn({ method: "POST" })
+  .validator((data: { ownerEmail: string; contactRsvpId: string; email?: string; phone?: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const email = data.ownerEmail?.toLowerCase().trim();
+    if (!email || !data.contactRsvpId) return { ok: false };
+    const { data: owner } = await supabaseAdmin
+      .from("rsvps")
+      .select("id, organisation")
+      .eq("email", email)
+      .maybeSingle();
+    if (!owner) return { ok: false };
+    const partnerIds = await meetingPartnerIds(email, String(owner.organisation));
+    const source = partnerIds.has(data.contactRsvpId) ? "meeting" : "manual";
+    const { error } = await supabaseAdmin.from("lounge_contacts").upsert(
+      {
+        owner_email: email,
+        contact_rsvp_id: data.contactRsvpId,
+        contact_email: data.email?.trim() || null,
+        contact_phone: data.phone?.trim() || null,
+        source,
+      },
+      { onConflict: "owner_email,contact_rsvp_id" },
+    );
+    if (error) {
+      console.error("saveLoungeContactInfo error:", error);
+      return { ok: false };
+    }
+    return { ok: true };
+  });
