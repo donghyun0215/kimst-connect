@@ -240,7 +240,10 @@ function AdminPage() {
           <Stat label="Checked in (2 Sep)" value={`${day2CheckedIn} / ${day2.length}`} />
           <Stat label="Showcase" value={`${rsvps.filter((r) => r.attend_showcase).length}`} />
           <Stat label="Lunch (catering)" value={`${rsvps.filter((r) => r.attend_lunch).length}`} />
-          <Stat label="1:1 attendees" value={`${rsvps.filter((r) => r.attend_meetups).length}`} />
+          <Stat
+            label="1:1 bookers (2 Sep)"
+            value={`${new Set(bookings.filter((b) => b.timeslot_id.startsWith("slot")).map((b) => b.email.toLowerCase())).size}`}
+          />
           <Stat label="Event 1:1 filled" value={`${bookings.filter((b) => b.timeslot_id.startsWith("slot")).length} / ${totalSlots}`} />
           <Stat label="Nuldam 1:1 booked" value={`${bookings.filter((b) => b.timeslot_id.startsWith("n")).length}`} />
         </div>
