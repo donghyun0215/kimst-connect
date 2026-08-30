@@ -604,15 +604,15 @@ function eventStyle(type: BookingEvent["event_type"]) {
 // Attendance toggle. Green tick = physically at the event (QR check-in or
 // staff override). Clicking flips it — 'manual' via, so QR-vs-desk stays
 // distinguishable in the DB.
-function CheckInCell({ rsvp, password, onSaved }: { rsvp: AdminRsvp; password: string; onSaved: () => void }) {
+function CheckInCell({ rsvp, password, onSaved }: { rsvp: AdminRsvp; password: string; onSaved: () => void | Promise<unknown> }) {
   const [busy, setBusy] = useState(false);
   const checked = Boolean(rsvp.checked_in_at);
   const toggle = async () => {
     if (busy) return;
     setBusy(true);
     const res = await adminSetCheckedIn({ data: { password, rsvpId: rsvp.id, checked: !checked } });
+    if (res.ok) await onSaved();
     setBusy(false);
-    if (res.ok) onSaved();
   };
   return (
     <button
@@ -623,14 +623,28 @@ function CheckInCell({ rsvp, password, onSaved }: { rsvp: AdminRsvp; password: s
           ? `Checked in ${new Date(rsvp.checked_in_at as string).toLocaleTimeString()} (${rsvp.checked_in_via ?? "?"}) — click to undo`
           : "Not checked in — click to mark as attended"
       }
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ring-1 ring-inset transition disabled:opacity-50 ${
-        checked
-          ? "bg-emerald-50 text-emerald-700 ring-emerald-600/30 hover:bg-emerald-100"
-          : "bg-secondary text-muted-foreground ring-border hover:bg-muted"
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ring-1 ring-inset transition ${
+        busy
+          ? "cursor-wait bg-secondary text-muted-foreground ring-border"
+          : checked
+            ? "bg-emerald-50 text-emerald-700 ring-emerald-600/30 hover:bg-emerald-100"
+            : "bg-secondary text-muted-foreground ring-border hover:bg-muted"
       }`}
     >
-      {checked ? "✓ Here" : "—"}
-      {checked && rsvp.checked_in_via === "qr" && <span className="text-[9px] font-normal">QR</span>}
+      {busy ? (
+        <>
+          <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          Saving…
+        </>
+      ) : (
+        <>
+          {checked ? "✓ Here" : "—"}
+          {checked && rsvp.checked_in_via === "qr" && <span className="text-[9px] font-normal">QR</span>}
+        </>
+      )}
     </button>
   );
 }
