@@ -136,12 +136,14 @@ function AdminPage() {
   const guestCount = (v: string | null) =>
     v ? v.split(",").map((x) => x.trim()).filter(Boolean).length : 0;
 
-  // 2 Sep main-event cohort vs Nuldam-only (8/31 & 9/4 deep-dive) RSVPs.
-  // The RSVP form's session checkboxes get ticked by Nuldam bookers too
-  // (attend_meetups is the gateway to any 1:1), so booleans alone can't
-  // separate the cohorts. Nuldam-only = skipped showcase AND lunch, holds at
-  // least one Nuldam (n*) booking, and no event-day (slot*) booking.
-  // Everyone else is 2 Sep. Check-in counts against the 2 Sep cohort only.
+  // 2 Sep main-event cohort vs Nuldam-only (8/31 & 9/4 deep-dive) guests.
+  // Verified against production data (30 Aug): Nuldam-only visitors mostly
+  // never RSVP — they exist in bookings alone (e.g. booked via the Nuldam
+  // form directly). So the RSVP list is the 2 Sep cohort (minus anyone whose
+  // only footprint is n* bookings), and Nuldam-only counts DISTINCT n*
+  // booker emails that aren't in the 2 Sep cohort — catching booking-only
+  // people the RSVP table never sees. Someone with showcase/lunch ticked
+  // plus Nuldam bookings attends both and stays in 2 Sep.
   const { day2, nuldamOnly } = useMemo(() => {
     const slotEmails = new Set(
       bookings.filter((b) => b.timeslot_id.startsWith("slot")).map((b) => b.email.toLowerCase()),
@@ -149,14 +151,14 @@ function AdminPage() {
     const nuldamEmails = new Set(
       bookings.filter((b) => b.timeslot_id.startsWith("n")).map((b) => b.email.toLowerCase()),
     );
-    const isNuldamOnly = (r: AdminRsvp) => {
+    const isNuldamOnlyRsvp = (r: AdminRsvp) => {
       const e = r.email.toLowerCase();
       return !r.attend_showcase && !r.attend_lunch && nuldamEmails.has(e) && !slotEmails.has(e);
     };
-    return {
-      day2: rsvps.filter((r) => !isNuldamOnly(r)),
-      nuldamOnly: rsvps.filter(isNuldamOnly).length,
-    };
+    const day2Rsvps = rsvps.filter((r) => !isNuldamOnlyRsvp(r));
+    const day2Emails = new Set(day2Rsvps.map((r) => r.email.toLowerCase()));
+    const nuldamOnlyCount = [...nuldamEmails].filter((e) => !day2Emails.has(e)).length;
+    return { day2: day2Rsvps, nuldamOnly: nuldamOnlyCount };
   }, [rsvps, bookings]);
   const day2Guests = day2.reduce((n, r) => n + guestCount(r.additional_attendees), 0);
   const day2CheckedIn = day2.filter((r) => r.checked_in_at).length;
@@ -234,7 +236,7 @@ function AdminPage() {
         {/* STATS */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <Stat label="2 Sep RSVPs" value={`${day2.length}${day2Guests ? ` (+${day2Guests} guests)` : ""}`} />
-          <Stat label="Nuldam-only RSVPs" value={`${nuldamOnly}`} />
+          <Stat label="Nuldam-only guests" value={`${nuldamOnly}`} />
           <Stat label="Checked in (2 Sep)" value={`${day2CheckedIn} / ${day2.length}`} />
           <Stat label="Showcase" value={`${rsvps.filter((r) => r.attend_showcase).length}`} />
           <Stat label="Lunch (catering)" value={`${rsvps.filter((r) => r.attend_lunch).length}`} />
