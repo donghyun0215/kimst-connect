@@ -148,3 +148,9 @@ create table if not exists public.lounge_contacts (
 );
 alter table public.lounge_contacts enable row level security;
 grant select, insert, update, delete on public.lounge_contacts to service_role;
+
+-- ── wallet note (2026-08-30, Tammy) ────────────────────────────────
+-- Free-text "where we met / anything" note per saved contact. Optional by
+-- design — a card saves fine without it. Dropdown of venues was considered
+-- and rejected in favour of plain text (owner's call, 30 Aug).
+alter table public.lounge_contacts add column if not exists note text;

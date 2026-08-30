@@ -161,6 +161,7 @@ function LoungePage() {
   const [view, setView] = useState<"all" | "mine">("all");
   const [wallet, setWallet] = useState<WalletEntry[] | null>(null);
   const [walletSelected, setWalletSelected] = useState<WalletEntry | null>(null);
+  const [addTarget, setAddTarget] = useState<LoungeProfile | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
   const refreshWallet = async (ownerEmail: string) => {
@@ -811,16 +812,7 @@ function LoungePage() {
                   <button
                     type="button"
                     disabled={addedIds.has(selected.id)}
-                    onClick={() => {
-                      void addLoungeContact({ data: { ownerEmail: grantedEmail, contactRsvpId: selected.id } }).then(
-                        (r) => {
-                          if (r.ok) {
-                            setAddedIds((s) => new Set(s).add(selected.id));
-                            void refreshWallet(grantedEmail);
-                          }
-                        },
-                      );
-                    }}
+                    onClick={() => setAddTarget(selected)}
                     className="mt-1 flex w-full items-center justify-center gap-2 rounded-full border border-border py-2.5 text-sm font-semibold text-navy transition hover:bg-muted disabled:opacity-60"
                   >
                     {addedIds.has(selected.id) ? "✓ In My Contacts" : "＋ Add to My Contacts"}
@@ -829,6 +821,23 @@ function LoungePage() {
               </div>
             </div>
           </div>
+        )}
+
+        {addTarget && grantedEmail && (
+          <AddContactPopup
+            profile={addTarget}
+            onCancel={() => setAddTarget(null)}
+            onAdd={async (note) => {
+              const r = await addLoungeContact({
+                data: { ownerEmail: grantedEmail, contactRsvpId: addTarget.id, note: note || undefined },
+              });
+              if (r.ok) {
+                setAddedIds((s) => new Set(s).add(addTarget.id));
+                void refreshWallet(grantedEmail);
+              }
+              setAddTarget(null);
+            }}
+          />
         )}
 
         {walletSelected && grantedEmail && (
@@ -917,6 +926,9 @@ function MyContactsWall({
                 <div className="mt-0.5 truncate text-xs font-medium text-navy/60">{w.organisation}</div>
               </div>
             </div>
+            {w.saved_note && (
+              <p className="mt-2 line-clamp-1 text-[11px] italic text-muted-foreground">“{w.saved_note}”</p>
+            )}
             <div className="mt-3 flex flex-1 items-end justify-between gap-2">
               {w.source === "meeting" ? (
                 <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
@@ -953,6 +965,7 @@ function WalletCardModal({
 }) {
   const [wEmail, setWEmail] = useState(entry.saved_email ?? "");
   const [wPhone, setWPhone] = useState(entry.saved_phone ?? "");
+  const [wNote, setWNote] = useState(entry.saved_note ?? "");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -961,7 +974,7 @@ function WalletCardModal({
     setBusy(true);
     setMsg(null);
     const res = await saveLoungeContactInfo({
-      data: { ownerEmail, contactRsvpId: entry.rsvp_id, email: wEmail, phone: wPhone },
+      data: { ownerEmail, contactRsvpId: entry.rsvp_id, email: wEmail, phone: wPhone, note: wNote },
     });
     setBusy(false);
     setMsg(res.ok ? "Saved." : "Couldn't save — try again.");
@@ -1058,6 +1071,13 @@ function WalletCardModal({
                 placeholder="Their phone (optional)"
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-primary/30 transition focus:ring-2"
               />
+              <textarea
+                value={wNote}
+                onChange={(e) => setWNote(e.target.value)}
+                rows={2}
+                placeholder="Note — where you met, follow-up ideas… (optional)"
+                className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-primary/30 transition focus:ring-2"
+              />
               <div className="flex items-center justify-between gap-2">
                 <button
                   type="button"
@@ -1082,6 +1102,81 @@ function WalletCardModal({
               Remove from My Contacts
             </button>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Compact add-to-contacts popup: one optional free-text note ("where we
+// met" — Nuldam, Seafood Expo, an intro, anything), then Add. Tammy asked
+// for free text over a venue dropdown, and saving must work with the note
+// left empty (30 Aug).
+function AddContactPopup({
+  profile,
+  onAdd,
+  onCancel,
+}: {
+  profile: LoungeProfile;
+  onAdd: (note: string) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    if (busy) return;
+    setBusy(true);
+    await onAdd(note.trim());
+  };
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-sm rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+            style={{ backgroundColor: avatarColor(profile.full_name) }}
+          >
+            {initials(profile.full_name)}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-bold text-navy">Add {profile.full_name}</div>
+            <div className="truncate text-xs text-muted-foreground">{profile.organisation}</div>
+          </div>
+        </div>
+        <label className="mt-4 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Note <span className="font-normal normal-case">(optional)</span>
+        </label>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={2}
+          autoFocus
+          placeholder="Where did you meet? e.g. Nuldam session, Seafood Expo, introduced by…"
+          className="mt-1 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-primary/30 transition focus:ring-2"
+        />
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="flex-1 rounded-full border border-border py-2.5 text-sm font-semibold text-navy transition hover:bg-muted disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => void submit()}
+            disabled={busy}
+            className="flex-1 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+          >
+            {busy ? "Adding…" : "Add to My Contacts"}
+          </button>
         </div>
       </div>
     </div>

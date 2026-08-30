@@ -644,6 +644,7 @@ export interface WalletEntry {
   meeting_email: string | null;
   saved_email: string | null;
   saved_phone: string | null;
+  saved_note: string | null;
 }
 
 async function meetingPartnerIds(ownerEmail: string, ownerOrg: string): Promise<Set<string>> {
@@ -701,10 +702,10 @@ export const listMyContacts = createServerFn({ method: "POST" })
 
     const { data: saved } = await supabaseAdmin
       .from("lounge_contacts")
-      .select("contact_rsvp_id, contact_email, contact_phone")
+      .select("contact_rsvp_id, contact_email, contact_phone, note")
       .eq("owner_email", email);
     const savedMap = new Map(
-      (saved ?? []).map((s) => [String(s.contact_rsvp_id), { e: s.contact_email, p: s.contact_phone }]),
+      (saved ?? []).map((s) => [String(s.contact_rsvp_id), { e: s.contact_email, p: s.contact_phone, n: s.note }]),
     );
 
     const wantedIds = new Set([...partnerIds, ...savedMap.keys()]);
@@ -734,6 +735,7 @@ export const listMyContacts = createServerFn({ method: "POST" })
           meeting_email: isMeeting ? String(r.email) : null,
           saved_email: s?.e ?? null,
           saved_phone: s?.p ?? null,
+          saved_note: s?.n ?? null,
         };
       })
       .sort((a, b) => (a.source === b.source ? a.full_name.localeCompare(b.full_name) : a.source === "meeting" ? -1 : 1));
@@ -741,7 +743,7 @@ export const listMyContacts = createServerFn({ method: "POST" })
   });
 
 export const addLoungeContact = createServerFn({ method: "POST" })
-  .validator((data: { ownerEmail: string; contactRsvpId: string }) => data)
+  .validator((data: { ownerEmail: string; contactRsvpId: string; note?: string }) => data)
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     const email = data.ownerEmail?.toLowerCase().trim();
     if (!email || !data.contactRsvpId) return { ok: false };
@@ -750,7 +752,12 @@ export const addLoungeContact = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
       .from("lounge_contacts")
       .upsert(
-        { owner_email: email, contact_rsvp_id: data.contactRsvpId, source: "manual" },
+        {
+          owner_email: email,
+          contact_rsvp_id: data.contactRsvpId,
+          source: "manual",
+          note: data.note?.trim() || null,
+        },
         { onConflict: "owner_email,contact_rsvp_id", ignoreDuplicates: true },
       );
     if (error) {
@@ -778,7 +785,7 @@ export const removeLoungeContact = createServerFn({ method: "POST" })
   });
 
 export const saveLoungeContactInfo = createServerFn({ method: "POST" })
-  .validator((data: { ownerEmail: string; contactRsvpId: string; email?: string; phone?: string }) => data)
+  .validator((data: { ownerEmail: string; contactRsvpId: string; email?: string; phone?: string; note?: string }) => data)
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     const email = data.ownerEmail?.toLowerCase().trim();
     if (!email || !data.contactRsvpId) return { ok: false };
@@ -796,6 +803,7 @@ export const saveLoungeContactInfo = createServerFn({ method: "POST" })
         contact_rsvp_id: data.contactRsvpId,
         contact_email: data.email?.trim() || null,
         contact_phone: data.phone?.trim() || null,
+        note: data.note?.trim() || null,
         source,
       },
       { onConflict: "owner_email,contact_rsvp_id" },
