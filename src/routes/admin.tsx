@@ -137,24 +137,27 @@ function AdminPage() {
     v ? v.split(",").map((x) => x.trim()).filter(Boolean).length : 0;
 
   // 2 Sep main-event cohort vs Nuldam-only (8/31 & 9/4 deep-dive) RSVPs.
-  // Someone belongs to 2 Sep if they picked any event-day session on the
-  // RSVP form OR hold an event-day (slot*) 1:1 booking. Check-in counts
-  // against the 2 Sep cohort only — Nuldam sessions have no QR desk.
-  const eventDayEmails = useMemo(() => {
+  // The RSVP form's session checkboxes get ticked by Nuldam bookers too
+  // (attend_meetups is the gateway to any 1:1), so booleans alone can't
+  // separate the cohorts. Nuldam-only = skipped showcase AND lunch, holds at
+  // least one Nuldam (n*) booking, and no event-day (slot*) booking.
+  // Everyone else is 2 Sep. Check-in counts against the 2 Sep cohort only.
+  const { day2, nuldamOnly } = useMemo(() => {
     const slotEmails = new Set(
       bookings.filter((b) => b.timeslot_id.startsWith("slot")).map((b) => b.email.toLowerCase()),
     );
-    return new Set(
-      rsvps
-        .filter(
-          (r) =>
-            r.attend_showcase || r.attend_lunch || r.attend_meetups || slotEmails.has(r.email.toLowerCase()),
-        )
-        .map((r) => r.email.toLowerCase()),
+    const nuldamEmails = new Set(
+      bookings.filter((b) => b.timeslot_id.startsWith("n")).map((b) => b.email.toLowerCase()),
     );
+    const isNuldamOnly = (r: AdminRsvp) => {
+      const e = r.email.toLowerCase();
+      return !r.attend_showcase && !r.attend_lunch && nuldamEmails.has(e) && !slotEmails.has(e);
+    };
+    return {
+      day2: rsvps.filter((r) => !isNuldamOnly(r)),
+      nuldamOnly: rsvps.filter(isNuldamOnly).length,
+    };
   }, [rsvps, bookings]);
-  const day2 = rsvps.filter((r) => eventDayEmails.has(r.email.toLowerCase()));
-  const nuldamOnly = rsvps.length - day2.length;
   const day2Guests = day2.reduce((n, r) => n + guestCount(r.additional_attendees), 0);
   const day2CheckedIn = day2.filter((r) => r.checked_in_at).length;
 
