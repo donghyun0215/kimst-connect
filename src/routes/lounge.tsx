@@ -12,6 +12,9 @@ import {
   addLoungeContact,
   removeLoungeContact,
   saveLoungeContactInfo,
+  addCustomContact,
+  updateCustomContact,
+  removeCustomContact,
   type LoungeProfile,
   type WalletEntry,
 } from "@/lib/booking.server";
@@ -162,13 +165,14 @@ function LoungePage() {
   const [wallet, setWallet] = useState<WalletEntry[] | null>(null);
   const [walletSelected, setWalletSelected] = useState<WalletEntry | null>(null);
   const [addTarget, setAddTarget] = useState<LoungeProfile | null>(null);
+  const [customEditor, setCustomEditor] = useState<WalletEntry | "new" | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
   const refreshWallet = async (ownerEmail: string) => {
     const res = await listMyContacts({ data: { email: ownerEmail } });
     if (res.ok) {
       setWallet(res.entries);
-      setAddedIds(new Set(res.entries.map((e) => e.rsvp_id)));
+      setAddedIds(new Set(res.entries.map((e) => e.rsvp_id).filter((id): id is string => Boolean(id))));
     }
   };
 
@@ -636,7 +640,8 @@ function LoungePage() {
               {view === "mine" && grantedEmail ? (
                 <MyContactsWall
                   wallet={wallet}
-                  onSelect={setWalletSelected}
+                  onSelect={(e) => (e.rsvp_id ? setWalletSelected(e) : setCustomEditor(e))}
+                  onAddCustom={() => setCustomEditor("new")}
                   onBrowseAll={() => setView("all")}
                 />
               ) : (
@@ -840,6 +845,18 @@ function LoungePage() {
           />
         )}
 
+        {customEditor && grantedEmail && (
+          <CustomContactModal
+            entry={customEditor === "new" ? null : customEditor}
+            ownerEmail={grantedEmail}
+            onClose={() => setCustomEditor(null)}
+            onDone={() => {
+              setCustomEditor(null);
+              void refreshWallet(grantedEmail);
+            }}
+          />
+        )}
+
         {walletSelected && grantedEmail && (
           <WalletCardModal
             entry={walletSelected}
@@ -872,10 +889,12 @@ function LoungePage() {
 function MyContactsWall({
   wallet,
   onSelect,
+  onAddCustom,
   onBrowseAll,
 }: {
   wallet: WalletEntry[] | null;
   onSelect: (e: WalletEntry) => void;
+  onAddCustom: () => void;
   onBrowseAll: () => void;
 }) {
   if (!wallet) {
@@ -889,26 +908,44 @@ function MyContactsWall({
           People you meet in a 1:1 session appear here automatically. You can also add anyone from
           the attendee wall — open their card and tap “Add to My Contacts”.
         </p>
-        <button
-          type="button"
-          onClick={onBrowseAll}
-          className="mt-4 rounded-full border border-border px-4 py-2 text-xs font-semibold text-navy transition hover:bg-muted"
-        >
-          Browse attendees
-        </button>
+        <div className="mt-4 flex justify-center gap-2">
+          <button
+            type="button"
+            onClick={onBrowseAll}
+            className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-navy transition hover:bg-muted"
+          >
+            Browse attendees
+          </button>
+          <button
+            type="button"
+            onClick={onAddCustom}
+            className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+          >
+            ＋ Add someone manually
+          </button>
+        </div>
       </div>
     );
   }
   const meetings = wallet.filter((w) => w.source === "meeting").length;
   return (
     <>
-      <p className="text-xs text-muted-foreground">
-        {wallet.length} saved{meetings ? ` · ${meetings} from your 1:1 meetings` : ""} · visible only to you
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          {wallet.length} saved{meetings ? ` · ${meetings} from your 1:1 meetings` : ""} · visible only to you
+        </p>
+        <button
+          type="button"
+          onClick={onAddCustom}
+          className="rounded-full bg-primary px-3.5 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:bg-primary/90"
+        >
+          ＋ Add someone manually
+        </button>
+      </div>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
         {wallet.map((w) => (
           <button
-            key={w.rsvp_id}
+            key={w.rsvp_id ?? w.entry_id}
             type="button"
             onClick={() => onSelect(w)}
             className="group flex flex-col rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-5"
@@ -934,9 +971,13 @@ function MyContactsWall({
                 <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                   1:1 meeting
                 </span>
-              ) : (
+              ) : w.rsvp_id ? (
                 <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-navy ring-1 ring-inset ring-border">
                   Saved
+                </span>
+              ) : (
+                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                  External
                 </span>
               )}
               <span className="shrink-0 text-[10px] text-muted-foreground opacity-0 transition group-hover:opacity-100">
@@ -974,7 +1015,7 @@ function WalletCardModal({
     setBusy(true);
     setMsg(null);
     const res = await saveLoungeContactInfo({
-      data: { ownerEmail, contactRsvpId: entry.rsvp_id, email: wEmail, phone: wPhone, note: wNote },
+      data: { ownerEmail, contactRsvpId: entry.rsvp_id as string, email: wEmail, phone: wPhone, note: wNote },
     });
     setBusy(false);
     setMsg(res.ok ? "Saved." : "Couldn't save — try again.");
@@ -984,7 +1025,7 @@ function WalletCardModal({
   const remove = async () => {
     if (busy) return;
     setBusy(true);
-    const res = await removeLoungeContact({ data: { ownerEmail, contactRsvpId: entry.rsvp_id } });
+    const res = await removeLoungeContact({ data: { ownerEmail, contactRsvpId: entry.rsvp_id as string } });
     setBusy(false);
     if (res.ok) onRemoved();
   };
@@ -1178,6 +1219,124 @@ function AddContactPopup({
             {busy ? "Adding…" : "Add to My Contacts"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Create/edit modal for external cards — people who aren't in the RSVP
+// list at all (Nuldam guests, Seafood Expo, personal intros). Only name is
+// required. These exist solely inside the owner's wallet; the public wall
+// renders from rsvps and never shows them.
+function CustomContactModal({
+  entry,
+  ownerEmail,
+  onClose,
+  onDone,
+}: {
+  entry: WalletEntry | null;
+  ownerEmail: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [name, setName] = useState(entry?.full_name ?? "");
+  const [org, setOrg] = useState(entry?.organisation ?? "");
+  const [title, setTitle] = useState(entry?.job_title ?? "");
+  const [cEmail, setCEmail] = useState(entry?.saved_email ?? "");
+  const [cPhone, setCPhone] = useState(entry?.saved_phone ?? "");
+  const [cNote, setCNote] = useState(entry?.saved_note ?? "");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const save = async () => {
+    if (busy || !name.trim()) return;
+    setBusy(true);
+    setErr(null);
+    const payload = {
+      ownerEmail,
+      name,
+      org: org || undefined,
+      title: title || undefined,
+      email: cEmail || undefined,
+      phone: cPhone || undefined,
+      note: cNote || undefined,
+    };
+    const res = entry?.entry_id
+      ? await updateCustomContact({ data: { ...payload, entryId: entry.entry_id } })
+      : await addCustomContact({ data: payload });
+    setBusy(false);
+    if (res.ok) onDone();
+    else setErr("Couldn't save — try again.");
+  };
+
+  const remove = async () => {
+    if (busy || !entry?.entry_id) return;
+    setBusy(true);
+    const res = await removeCustomContact({ data: { ownerEmail, entryId: entry.entry_id } });
+    setBusy(false);
+    if (res.ok) onDone();
+  };
+
+  const field =
+    "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-primary/30 transition focus:ring-2";
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[88dvh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-sm font-bold text-navy">{entry ? "Edit contact" : "Add someone manually"}</div>
+        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+          For people you met outside the attendee list — Nuldam, Seafood Expo, anywhere. Saved only
+          in your wallet.
+        </p>
+        <div className="mt-4 space-y-2">
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name (required)" autoFocus className={field} />
+          <input value={org} onChange={(e) => setOrg(e.target.value)} placeholder="Organisation (optional)" className={field} />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Job title (optional)" className={field} />
+          <input type="email" value={cEmail} onChange={(e) => setCEmail(e.target.value)} placeholder="Email (optional)" className={field} />
+          <input type="tel" value={cPhone} onChange={(e) => setCPhone(e.target.value)} placeholder="Phone (optional)" className={field} />
+          <textarea
+            value={cNote}
+            onChange={(e) => setCNote(e.target.value)}
+            rows={2}
+            placeholder="Note — where you met, follow-up ideas… (optional)"
+            className={`${field} resize-none`}
+          />
+        </div>
+        {err && <p className="mt-2 text-[11px] text-rose-600">{err}</p>}
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="flex-1 rounded-full border border-border py-2.5 text-sm font-semibold text-navy transition hover:bg-muted disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => void save()}
+            disabled={busy || !name.trim()}
+            className="flex-1 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+          >
+            {busy ? "Saving…" : entry ? "Save changes" : "Add contact"}
+          </button>
+        </div>
+        {entry?.entry_id && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void remove()}
+            className="mt-2 w-full rounded-full border border-border py-2 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-rose-600"
+          >
+            Remove from My Contacts
+          </button>
+        )}
       </div>
     </div>
   );

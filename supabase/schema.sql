@@ -154,3 +154,14 @@ grant select, insert, update, delete on public.lounge_contacts to service_role;
 -- design — a card saves fine without it. Dropdown of venues was considered
 -- and rejected in favour of plain text (owner's call, 30 Aug).
 alter table public.lounge_contacts add column if not exists note text;
+
+-- ── custom (external) contacts (2026-08-30) ────────────────────────
+-- People met outside the RSVP universe (Nuldam guests, Seafood Expo,
+-- personal intros) can be saved as free-form cards. contact_rsvp_id goes
+-- nullable: null + custom_name = an external card. These live ONLY in the
+-- owner's wallet — the public attendee wall renders from rsvps alone and
+-- never reads this table.
+alter table public.lounge_contacts alter column contact_rsvp_id drop not null;
+alter table public.lounge_contacts add column if not exists custom_name text;
+alter table public.lounge_contacts add column if not exists custom_org text;
+alter table public.lounge_contacts add column if not exists custom_title text;

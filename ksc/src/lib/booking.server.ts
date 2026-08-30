@@ -633,7 +633,10 @@ function slugForOrg(org: string): string | null {
 }
 
 export interface WalletEntry {
-  rsvp_id: string;
+  /** RSVP id for attendee contacts; null for custom (external) cards. */
+  rsvp_id: string | null;
+  /** lounge_contacts row id — set for custom cards, used for edits/removal. */
+  entry_id: string | null;
   full_name: string;
   organisation: string;
   job_title: string;
@@ -702,14 +705,34 @@ export const listMyContacts = createServerFn({ method: "POST" })
 
     const { data: saved } = await supabaseAdmin
       .from("lounge_contacts")
-      .select("contact_rsvp_id, contact_email, contact_phone, note")
+      .select("id, contact_rsvp_id, contact_email, contact_phone, note, custom_name, custom_org, custom_title")
       .eq("owner_email", email);
+    const savedRows = saved ?? [];
     const savedMap = new Map(
-      (saved ?? []).map((s) => [String(s.contact_rsvp_id), { e: s.contact_email, p: s.contact_phone, n: s.note }]),
+      savedRows
+        .filter((s) => s.contact_rsvp_id)
+        .map((s) => [String(s.contact_rsvp_id), { e: s.contact_email, p: s.contact_phone, n: s.note }]),
     );
+    // External cards: no rsvp reference, wholly owner-private.
+    const customEntries: WalletEntry[] = savedRows
+      .filter((s) => !s.contact_rsvp_id && s.custom_name)
+      .map((s) => ({
+        rsvp_id: null,
+        entry_id: String(s.id),
+        full_name: String(s.custom_name),
+        organisation: s.custom_org ? String(s.custom_org) : "",
+        job_title: s.custom_title ? String(s.custom_title) : "",
+        primary_interest: null,
+        contact_url: null,
+        source: "manual" as const,
+        meeting_email: null,
+        saved_email: s.contact_email,
+        saved_phone: s.contact_phone,
+        saved_note: s.note,
+      }));
 
     const wantedIds = new Set([...partnerIds, ...savedMap.keys()]);
-    if (!wantedIds.size) return { ok: true, entries: [] };
+    if (!wantedIds.size && !customEntries.length) return { ok: true, entries: customEntries };
 
     const { data: rows, error } = await supabaseAdmin
       .from("rsvps")
@@ -726,6 +749,7 @@ export const listMyContacts = createServerFn({ method: "POST" })
         const s = savedMap.get(String(r.id));
         return {
           rsvp_id: String(r.id),
+          entry_id: null,
           full_name: r.full_name,
           organisation: r.organisation,
           job_title: r.job_title,
@@ -739,7 +763,7 @@ export const listMyContacts = createServerFn({ method: "POST" })
         };
       })
       .sort((a, b) => (a.source === b.source ? a.full_name.localeCompare(b.full_name) : a.source === "meeting" ? -1 : 1));
-    return { ok: true, entries };
+    return { ok: true, entries: [...entries, ...customEntries.sort((a, b) => a.full_name.localeCompare(b.full_name))] };
   });
 
 export const addLoungeContact = createServerFn({ method: "POST" })
@@ -810,6 +834,100 @@ export const saveLoungeContactInfo = createServerFn({ method: "POST" })
     );
     if (error) {
       console.error("saveLoungeContactInfo error:", error);
+      return { ok: false };
+    }
+    return { ok: true };
+  });
+
+// ── Custom (external) contacts ─────────────────────────────────────
+// Free-form cards for people met outside the RSVP universe. Wallet-private
+// by construction — the public wall never reads lounge_contacts.
+export const addCustomContact = createServerFn({ method: "POST" })
+  .validator(
+    (data: {
+      ownerEmail: string;
+      name: string;
+      org?: string;
+      title?: string;
+      email?: string;
+      phone?: string;
+      note?: string;
+    }) => data,
+  )
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const email = data.ownerEmail?.toLowerCase().trim();
+    const name = data.name?.trim();
+    if (!email || !name) return { ok: false };
+    const { data: owner } = await supabaseAdmin.from("rsvps").select("id").eq("email", email).maybeSingle();
+    if (!owner) return { ok: false };
+    const { error } = await supabaseAdmin.from("lounge_contacts").insert({
+      owner_email: email,
+      contact_rsvp_id: null,
+      custom_name: name,
+      custom_org: data.org?.trim() || null,
+      custom_title: data.title?.trim() || null,
+      contact_email: data.email?.trim() || null,
+      contact_phone: data.phone?.trim() || null,
+      note: data.note?.trim() || null,
+      source: "manual",
+    });
+    if (error) {
+      console.error("addCustomContact error:", error);
+      return { ok: false };
+    }
+    return { ok: true };
+  });
+
+export const updateCustomContact = createServerFn({ method: "POST" })
+  .validator(
+    (data: {
+      ownerEmail: string;
+      entryId: string;
+      name: string;
+      org?: string;
+      title?: string;
+      email?: string;
+      phone?: string;
+      note?: string;
+    }) => data,
+  )
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const email = data.ownerEmail?.toLowerCase().trim();
+    const name = data.name?.trim();
+    if (!email || !name || !data.entryId) return { ok: false };
+    const { error } = await supabaseAdmin
+      .from("lounge_contacts")
+      .update({
+        custom_name: name,
+        custom_org: data.org?.trim() || null,
+        custom_title: data.title?.trim() || null,
+        contact_email: data.email?.trim() || null,
+        contact_phone: data.phone?.trim() || null,
+        note: data.note?.trim() || null,
+      })
+      .eq("id", data.entryId)
+      .eq("owner_email", email)
+      .is("contact_rsvp_id", null);
+    if (error) {
+      console.error("updateCustomContact error:", error);
+      return { ok: false };
+    }
+    return { ok: true };
+  });
+
+export const removeCustomContact = createServerFn({ method: "POST" })
+  .validator((data: { ownerEmail: string; entryId: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const email = data.ownerEmail?.toLowerCase().trim();
+    if (!email || !data.entryId) return { ok: false };
+    const { error } = await supabaseAdmin
+      .from("lounge_contacts")
+      .delete()
+      .eq("id", data.entryId)
+      .eq("owner_email", email)
+      .is("contact_rsvp_id", null);
+    if (error) {
+      console.error("removeCustomContact error:", error);
       return { ok: false };
     }
     return { ok: true };
