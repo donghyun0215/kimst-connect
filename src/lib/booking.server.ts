@@ -932,3 +932,72 @@ export const removeCustomContact = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// ── Organizer team view (2026-08-30, Tammy) ────────────────────────
+// @lodestart.ai accounts entering the lounge can see every MANUALLY added
+// wallet entry across all attendees (source='manual': saved attendees +
+// external cards) with owner attribution — the collected-leads view.
+// Auto 1:1 partners aren't stored rows, so they never appear here. The
+// wallet UI discloses organizer visibility for manual cards.
+export interface TeamContactEntry {
+  owner_email: string;
+  full_name: string;
+  organisation: string;
+  job_title: string;
+  is_external: boolean;
+  contact_email: string | null;
+  contact_phone: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export const listTeamContacts = createServerFn({ method: "POST" })
+  .validator((data: { email: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: true; entries: TeamContactEntry[] } | { ok: false }> => {
+    const email = data.email?.toLowerCase().trim();
+    if (!email || !email.endsWith("@lodestart.ai")) return { ok: false };
+    const { data: owner } = await supabaseAdmin.from("rsvps").select("id").eq("email", email).maybeSingle();
+    if (!owner) return { ok: false };
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("lounge_contacts")
+      .select("owner_email, contact_rsvp_id, contact_email, contact_phone, note, custom_name, custom_org, custom_title, created_at")
+      .eq("source", "manual")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("listTeamContacts error:", error);
+      return { ok: false };
+    }
+
+    const rsvpIds = [...new Set((rows ?? []).map((r) => r.contact_rsvp_id).filter(Boolean))] as string[];
+    const profiles = new Map<string, { full_name: string; organisation: string; job_title: string }>();
+    if (rsvpIds.length) {
+      const { data: rs } = await supabaseAdmin
+        .from("rsvps")
+        .select("id, full_name, organisation, job_title")
+        .in("id", rsvpIds);
+      for (const r of rs ?? []) {
+        profiles.set(String(r.id), {
+          full_name: r.full_name,
+          organisation: r.organisation,
+          job_title: r.job_title,
+        });
+      }
+    }
+
+    const entries: TeamContactEntry[] = (rows ?? []).map((r) => {
+      const p = r.contact_rsvp_id ? profiles.get(String(r.contact_rsvp_id)) : null;
+      return {
+        owner_email: String(r.owner_email),
+        full_name: p?.full_name ?? String(r.custom_name ?? "(unknown)"),
+        organisation: p?.organisation ?? String(r.custom_org ?? ""),
+        job_title: p?.job_title ?? String(r.custom_title ?? ""),
+        is_external: !r.contact_rsvp_id,
+        contact_email: r.contact_email,
+        contact_phone: r.contact_phone,
+        note: r.note,
+        created_at: String(r.created_at),
+      };
+    });
+    return { ok: true, entries };
+  });

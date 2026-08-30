@@ -15,6 +15,8 @@ import {
   addCustomContact,
   updateCustomContact,
   removeCustomContact,
+  listTeamContacts,
+  type TeamContactEntry,
   type LoungeProfile,
   type WalletEntry,
 } from "@/lib/booking.server";
@@ -161,12 +163,20 @@ function LoungePage() {
   const [cBusy, setCBusy] = useState(false);
 
   // My Contacts wallet ("내 명함집")
-  const [view, setView] = useState<"all" | "mine">("all");
+  const [view, setView] = useState<"all" | "mine" | "team">("all");
+  const [teamEntries, setTeamEntries] = useState<TeamContactEntry[] | null>(null);
   const [wallet, setWallet] = useState<WalletEntry[] | null>(null);
   const [walletSelected, setWalletSelected] = useState<WalletEntry | null>(null);
   const [addTarget, setAddTarget] = useState<LoungeProfile | null>(null);
   const [customEditor, setCustomEditor] = useState<WalletEntry | "new" | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+
+  const isTeam = Boolean(grantedEmail?.toLowerCase().endsWith("@lodestart.ai"));
+
+  const refreshTeam = async (ownerEmail: string) => {
+    const res = await listTeamContacts({ data: { email: ownerEmail } });
+    if (res.ok) setTeamEntries(res.entries);
+  };
 
   const refreshWallet = async (ownerEmail: string) => {
     const res = await listMyContacts({ data: { email: ownerEmail } });
@@ -634,10 +644,26 @@ function LoungePage() {
                   >
                     My Contacts{wallet?.length ? ` (${wallet.length})` : ""}
                   </button>
+                  {isTeam && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setView("team");
+                        if (grantedEmail) void refreshTeam(grantedEmail);
+                      }}
+                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                        view === "team" ? "bg-navy text-white" : "text-navy hover:bg-muted"
+                      }`}
+                    >
+                      Team view
+                    </button>
+                  )}
                 </div>
               )}
 
-              {view === "mine" && grantedEmail ? (
+              {view === "team" && isTeam ? (
+                <TeamContactsWall entries={teamEntries} />
+              ) : view === "mine" && grantedEmail ? (
                 <MyContactsWall
                   wallet={wallet}
                   onSelect={(e) => (e.rsvp_id ? setWalletSelected(e) : setCustomEditor(e))}
@@ -932,7 +958,7 @@ function MyContactsWall({
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
-          {wallet.length} saved{meetings ? ` · ${meetings} from your 1:1 meetings` : ""} · visible only to you
+          {wallet.length} saved{meetings ? ` · ${meetings} from your 1:1 meetings` : ""} · manually added cards are visible to you and the organizing team
         </p>
         <button
           type="button"
@@ -1291,8 +1317,8 @@ function CustomContactModal({
       >
         <div className="text-sm font-bold text-navy">{entry ? "Edit contact" : "Add someone manually"}</div>
         <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-          For people you met outside the attendee list — Nuldam, Seafood Expo, anywhere. Saved only
-          in your wallet.
+          For people you met outside the attendee list — Nuldam, Seafood Expo, anywhere. Saved in
+          your wallet and visible to the organizing team.
         </p>
         <div className="mt-4 space-y-2">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name (required)" autoFocus className={field} />
@@ -1339,5 +1365,74 @@ function CustomContactModal({
         )}
       </div>
     </div>
+  );
+}
+
+// Organizer-only read view: every manually saved card across all wallets,
+// newest first, with owner attribution. Gated server-side to @lodestart.ai
+// RSVP emails.
+function TeamContactsWall({ entries }: { entries: TeamContactEntry[] | null }) {
+  if (!entries) {
+    return <p className="mt-6 text-center text-sm text-muted-foreground">Loading team view…</p>;
+  }
+  if (entries.length === 0) {
+    return (
+      <div className="mt-4 rounded-2xl border border-dashed border-border bg-card/60 p-10 text-center">
+        <p className="text-sm font-semibold text-navy">No manually added contacts yet</p>
+        <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
+          When attendees save cards by hand — attendee-wall adds or external people — they'll show
+          up here with who saved them.
+        </p>
+      </div>
+    );
+  }
+  const externals = entries.filter((e) => e.is_external).length;
+  return (
+    <>
+      <p className="text-xs text-muted-foreground">
+        {entries.length} manually saved across all attendees{externals ? ` · ${externals} external` : ""} · organizer view
+      </p>
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+        {entries.map((e, i) => (
+          <div key={i} className="flex flex-col rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-white"
+                style={{ backgroundColor: avatarColor(e.full_name) }}
+              >
+                {initials(e.full_name)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-bold text-navy">{e.full_name}</div>
+                {e.job_title && (
+                  <div className="line-clamp-2 break-words text-xs leading-snug text-muted-foreground">{e.job_title}</div>
+                )}
+                {e.organisation && <div className="mt-0.5 truncate text-xs font-medium text-navy/60">{e.organisation}</div>}
+              </div>
+              {e.is_external ? (
+                <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                  External
+                </span>
+              ) : (
+                <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-navy ring-1 ring-inset ring-border">
+                  Attendee
+                </span>
+              )}
+            </div>
+            {(e.contact_email || e.contact_phone) && (
+              <div className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
+                {e.contact_email && <div className="break-all">✉ {e.contact_email}</div>}
+                {e.contact_phone && <div>☎ {e.contact_phone}</div>}
+              </div>
+            )}
+            {e.note && <p className="mt-2 line-clamp-2 text-[11px] italic text-muted-foreground">“{e.note}”</p>}
+            <div className="mt-3 border-t border-border pt-2 text-[10px] text-muted-foreground">
+              Saved by <span className="font-semibold text-navy/70">{e.owner_email}</span> ·{" "}
+              {new Date(e.created_at).toLocaleDateString()}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
