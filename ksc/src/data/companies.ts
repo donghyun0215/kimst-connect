@@ -270,7 +270,7 @@ export const companies: Company[] = [
     sector: "Premium Pet Food",
     stage: "Scale-up",
     track: "track2",
-    website: "http://www.eastseabrother.com/en/",
+    website: "https://eastseabrother.store/",
     email: "info@eastseabrother.com",
     phone: "+82 10-9566-6028",
     problem: [
