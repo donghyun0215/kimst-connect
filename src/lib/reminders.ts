@@ -25,7 +25,7 @@ export interface Reminder {
 }
 
 const SITE = "https://kimst-rsvp-2026.vercel.app";
-const SUBJECT = "Your schedule — K-Marine Tech Open Innovation Day, 2 Sep";
+const SUBJECT = "See you tomorrow — K-Marine Tech Open Innovation Day, 2 Sep";
 
 // Change the sender block here if someone else signs the mailout.
 const SIGN_NAME = "Tammy Ahn";
@@ -115,7 +115,7 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
       // ── plain text ──
       const t: string[] = [];
       t.push(`Dear ${r.full_name},`, "");
-      t.push("We're looking forward to welcoming you to the K-Marine Tech Open Innovation Day next week.", "");
+      t.push("Just a final reminder — the K-Marine Tech Open Innovation Day is tomorrow, and we're looking forward to seeing you there.", "");
       t.push("Wednesday, 2 September 2026 | 10:00 - 16:00");
       t.push(EVENT_VENUE);
       t.push(EVENT_ADDRESS);
@@ -139,7 +139,7 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
       }
       t.push("", "NETWORKING ON THE DAY", "-----------------------------");
       t.push("We've prepared a Virtual Networking Lounge - a private, attendee-only directory of everyone in the room (name, organisation and role), so conversations can continue after the day itself.");
-      t.push("The lounge opens on-site: scan the QR code at the venue on 2 September to browse who's there.", "");
+      t.push("On arrival: scan the QR code at the entrance and enter this email address to check in and open the lounge — that's how you collect your name badge. Please have this email handy.", "");
       if (r.contact_url) {
         t.push("Your lounge card links to this LinkedIn profile:");
         t.push(`  ${r.contact_url}`);
@@ -150,7 +150,7 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
       t.push("");
       t.push("Personal contact details - emails and phone numbers - are never displayed. Connections happen through LinkedIn only.", "");
       t.push(`Need to change your booking? ${SITE}/book`, "");
-      t.push("See you on the 2nd.", "");
+      t.push("See you tomorrow.", "");
       t.push("Warm regards,", SIGN_NAME, SIGN_ORG);
 
       // ── html ──
@@ -176,7 +176,7 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
       );
       h.push(`<p style="margin:0 0 14px;">Dear ${esc(r.full_name)},</p>`);
       h.push(
-        `<p style="margin:0 0 20px;">We're looking forward to welcoming you to the <strong>K-Marine Tech Open Innovation Day</strong> next week.</p>`,
+        `<p style="margin:0 0 20px;">Just a final reminder — the <strong>K-Marine Tech Open Innovation Day</strong> is <strong>tomorrow</strong>, and we're looking forward to seeing you there.</p>`,
       );
       h.push(
         `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#F2F6FC;border-left:4px solid #0766EE;border-radius:6px;">` +
@@ -216,7 +216,7 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
         `<p style="margin:0 0 12px;">We've prepared a <strong>Virtual Networking Lounge</strong> — a private, attendee-only directory of everyone in the room (name, organisation and role), so conversations can continue after the day itself.</p>`,
       );
       h.push(
-        `<p style="margin:0 0 14px;">The lounge opens <strong>on-site</strong>: scan the QR code at the venue on 2 September to browse who's there.</p>`,
+        `<p style="margin:0 0 14px;"><strong>On arrival:</strong> scan the QR code at the entrance and enter this email address to check in and open the lounge — that's how you collect your name badge. Please have this email handy.</p>`,
       );
       if (r.contact_url) {
         h.push(
@@ -239,7 +239,7 @@ export function buildReminders(rsvps: AdminRsvp[], bookings: AdminBooking[]): Re
       h.push(
         `<p style="margin:0 0 22px;font-size:14px;">Need to change your booking? ${link(`${SITE}/book`, "Manage it here")}.</p>`,
       );
-      h.push(`<p style="margin:0 0 18px;">See you on the 2nd.</p>`);
+      h.push(`<p style="margin:0 0 18px;">See you tomorrow.</p>`);
       h.push(
         `<p style="margin:0;padding-top:16px;border-top:1px solid #E3EAF6;font-size:14px;color:#5A6B87;">Warm regards,<br>` +
           `<strong style="color:#0A2163;">${SIGN_NAME}</strong><br>${SIGN_ORG}</p>`,
