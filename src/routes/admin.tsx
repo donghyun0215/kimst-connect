@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
 import { updateContactUrl, adminSetCheckedIn } from "@/lib/booking.server";
 import { buildReminders, remindersToCsv } from "@/lib/reminders";
+import { buildThankYous, thankYousToCsv } from "@/lib/thankyou";
 import kimstLogo from "@/assets/kimst-logo.png";
 
 export const Route = createFileRoute("/admin")({
@@ -713,6 +714,18 @@ function ReminderSection({ rsvps, bookings }: { rsvps: AdminRsvp[]; bookings: Ad
     URL.revokeObjectURL(a.href);
   };
 
+  // Post-event thank-you mailout — one universal message (no branches),
+  // same column set so the same Sheet + Apps Script sends it.
+  const downloadThankYouCsv = () => {
+    const mails = buildThankYous(rsvps);
+    const blob = new Blob(["\ufeff" + thankYousToCsv(mails)], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `kimst-thankyou-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   return (
     <section className="mt-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -723,6 +736,13 @@ function ReminderSection({ rsvps, bookings }: { rsvps: AdminRsvp[]; bookings: Ad
             className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
           >
             Download CSV (mail merge)
+          </button>
+          <button
+            onClick={downloadThankYouCsv}
+            className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+            title="Post-event thank-you — one universal message, same sheet/script pipeline"
+          >
+            Download Thank-you CSV
           </button>
           <button
             onClick={() => setOpen((v) => !v)}
