@@ -666,6 +666,7 @@ function LoungePage() {
               ) : view === "mine" && grantedEmail ? (
                 <MyContactsWall
                   wallet={wallet}
+                  ownerEmail={grantedEmail}
                   onSelect={(e) => (e.rsvp_id ? setWalletSelected(e) : setCustomEditor(e))}
                   onAddCustom={() => setCustomEditor("new")}
                   onBrowseAll={() => setView("all")}
@@ -914,15 +915,38 @@ function LoungePage() {
 
 function MyContactsWall({
   wallet,
+  ownerEmail,
   onSelect,
   onAddCustom,
   onBrowseAll,
 }: {
   wallet: WalletEntry[] | null;
+  ownerEmail: string;
   onSelect: (e: WalletEntry) => void;
   onAddCustom: () => void;
   onBrowseAll: () => void;
 }) {
+  // Multi-select → one email to everyone chosen. Opens the person's own
+  // mail app via mailto: (no OAuth, no server, works on PC/Android/iOS);
+  // recipients go in BCC so they never see each other. Web-Gmail/Outlook
+  // and copy-to-clipboard fallbacks cover machines with no default client.
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const keyOf = (w: WalletEntry) => w.rsvp_id ?? w.entry_id ?? "";
+  const emailOf = (w: WalletEntry) => w.meeting_email ?? w.saved_email ?? null;
+  const togglePick = (w: WalletEntry) =>
+    setPicked((s) => {
+      const n = new Set(s);
+      const k = keyOf(w);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
+  const exitSelect = () => {
+    setSelecting(false);
+    setPicked(new Set());
+  };
+
   if (!wallet) {
     return <p className="mt-6 text-center text-sm text-muted-foreground">Loading your contacts…</p>;
   }
@@ -960,22 +984,53 @@ function MyContactsWall({
         <p className="text-xs text-muted-foreground">
           {wallet.length} saved{meetings ? ` · ${meetings} from your 1:1 meetings` : ""} · manually added cards are visible to you and the organizing team
         </p>
-        <button
-          type="button"
-          onClick={onAddCustom}
-          className="rounded-full bg-primary px-3.5 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:bg-primary/90"
-        >
-          ＋ Add someone manually
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => (selecting ? exitSelect() : setSelecting(true))}
+            className={`rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition ${
+              selecting
+                ? "bg-navy text-white hover:bg-navy/85"
+                : "border border-border text-navy hover:bg-muted"
+            }`}
+          >
+            {selecting ? "Done" : "✉ Email several"}
+          </button>
+          <button
+            type="button"
+            onClick={onAddCustom}
+            className="rounded-full bg-primary px-3.5 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:bg-primary/90"
+          >
+            ＋ Add someone manually
+          </button>
+        </div>
       </div>
+      {selecting && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Tap cards to select. Only contacts with a known email can be emailed — 1:1 partners, external cards, or anyone you've saved an email for.
+        </p>
+      )}
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
         {wallet.map((w) => (
           <button
             key={w.rsvp_id ?? w.entry_id}
             type="button"
-            onClick={() => onSelect(w)}
-            className="group flex flex-col rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-5"
+            onClick={() => (selecting ? togglePick(w) : onSelect(w))}
+            className={`group relative flex flex-col rounded-2xl border bg-card p-4 text-left shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-5 ${
+              selecting && picked.has(keyOf(w))
+                ? "border-primary ring-2 ring-primary/40"
+                : "border-border hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+            } ${selecting && !emailOf(w) ? "opacity-50" : ""}`}
           >
+            {selecting && (
+              <span
+                className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-bold ${
+                  picked.has(keyOf(w)) ? "border-primary bg-primary text-white" : "border-border bg-background text-transparent"
+                }`}
+              >
+                ✓
+              </span>
+            )}
             <div className="flex items-start gap-3">
               <div
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-white"
@@ -1013,7 +1068,113 @@ function MyContactsWall({
           </button>
         ))}
       </div>
+      {selecting && picked.size > 0 && (
+        <BulkEmailBar
+          entries={wallet.filter((w) => picked.has(keyOf(w)))}
+          ownerEmail={ownerEmail}
+          emailOf={emailOf}
+          onDone={exitSelect}
+        />
+      )}
     </>
+  );
+}
+
+// Sticky action bar for multi-select email. Builds mailto: with the owner
+// in To (some clients drop a BCC-only compose) and everyone else in BCC.
+// mailto URLs cap out around ~2,000 chars, so large picks are split into
+// batches; web Gmail/Outlook links and a copy button cover PCs with no
+// default mail client. Subject is prefilled with the event name for
+// recipient context; body is left to the sender's own voice.
+const BULK_SUBJECT = "Great meeting you at K-Marine Tech Open Innovation Day";
+const BULK_BATCH = 40;
+
+function BulkEmailBar({
+  entries,
+  ownerEmail,
+  emailOf,
+  onDone,
+}: {
+  entries: WalletEntry[];
+  ownerEmail: string;
+  emailOf: (w: WalletEntry) => string | null;
+  onDone: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const emails = [...new Set(entries.map(emailOf).filter((e): e is string => Boolean(e)))];
+  const missing = entries.length - emails.length;
+  const batches: string[][] = [];
+  for (let i = 0; i < emails.length; i += BULK_BATCH) batches.push(emails.slice(i, i + BULK_BATCH));
+  const subj = encodeURIComponent(BULK_SUBJECT);
+
+  const mailto = (list: string[]) =>
+    list.length === 1
+      ? `mailto:${list[0]}?subject=${subj}`
+      : `mailto:${encodeURIComponent(ownerEmail)}?bcc=${encodeURIComponent(list.join(","))}&subject=${subj}`;
+  const gmailWeb = (list: string[]) =>
+    `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(list.join(","))}&su=${subj}`;
+  const outlookWeb = (list: string[]) =>
+    `https://outlook.office.com/mail/deeplink/compose?bcc=${encodeURIComponent(list.join(";"))}&subject=${subj}`;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(emails.join(", "));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard blocked — links still work */
+    }
+  };
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 shadow-[0_-8px_24px_rgba(10,33,99,0.08)] backdrop-blur sm:p-4">
+      <div className="mx-auto flex max-w-3xl flex-col gap-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-navy">
+            <strong>{entries.length} selected</strong> · {emails.length} with email
+            {missing > 0 && <span className="text-muted-foreground"> · {missing} without (skipped)</span>}
+          </p>
+          <button type="button" onClick={onDone} className="text-[11px] font-semibold text-muted-foreground hover:text-navy">
+            Cancel
+          </button>
+        </div>
+        {emails.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground">
+            None of the selected cards has an email yet. Open a card to add one, or pick 1:1 partners.
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-2">
+              {batches.map((b, i) => (
+                <a
+                  key={i}
+                  href={mailto(b)}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  ✉ Open in my email app{batches.length > 1 ? ` (${i + 1}/${batches.length}, ${b.length})` : ` (${b.length})`}
+                </a>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              <span>No mail app on this device?</span>
+              {batches.map((b, i) => (
+                <span key={i} className="flex gap-3">
+                  <a href={gmailWeb(b)} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+                    Gmail web{batches.length > 1 ? ` ${i + 1}` : ""}
+                  </a>
+                  <a href={outlookWeb(b)} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+                    Outlook web{batches.length > 1 ? ` ${i + 1}` : ""}
+                  </a>
+                </span>
+              ))}
+              <button type="button" onClick={() => void copy()} className="font-semibold text-primary hover:underline">
+                {copied ? "Copied ✓" : "Copy all emails"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
