@@ -988,26 +988,36 @@ function MyContactsWall({
           <button
             type="button"
             onClick={() => (selecting ? exitSelect() : setSelecting(true))}
-            className={`rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition ${
+            className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm transition ${
               selecting
                 ? "bg-navy text-white hover:bg-navy/85"
-                : "border border-border text-navy hover:bg-muted"
+                : "bg-navy text-white hover:bg-navy/85"
             }`}
           >
-            {selecting ? "Done" : "✉ Email several"}
+            {selecting ? (
+              "Done selecting"
+            ) : (
+              <>
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="M3 7l9 6 9-6" />
+                </svg>
+                Send a group email
+              </>
+            )}
           </button>
           <button
             type="button"
             onClick={onAddCustom}
-            className="rounded-full bg-primary px-3.5 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:bg-primary/90"
+            className="rounded-full border border-border px-4 py-2.5 text-sm font-semibold text-navy transition hover:bg-muted"
           >
-            ＋ Add someone manually
+            ＋ Add someone
           </button>
         </div>
       </div>
       {selecting && (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Tap cards to select. Only contacts with a known email can be emailed — 1:1 partners, external cards, or anyone you've saved an email for.
+          <strong className="text-navy">Step 1:</strong> tap the cards you want to email. <strong className="text-navy">Step 2:</strong> hit the button at the bottom — your own mail app opens with everyone in BCC. Cards without an email are greyed out.
         </p>
       )}
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
@@ -1101,6 +1111,11 @@ function BulkEmailBar({
   onDone: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [opening, setOpening] = useState<string | null>(null);
+  const flashOpening = (label: string) => {
+    setOpening(label);
+    setTimeout(() => setOpening(null), 3500);
+  };
   const emails = [...new Set(entries.map(emailOf).filter((e): e is string => Boolean(e)))];
   const missing = entries.length - emails.length;
   const batches: string[][] = [];
@@ -1127,6 +1142,23 @@ function BulkEmailBar({
   };
 
   return (
+    <>
+      {opening && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-navy/40 backdrop-blur-sm">
+          <div className="flex items-center gap-3 rounded-2xl bg-card px-6 py-4 shadow-xl">
+            <svg className="h-5 w-5 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            <div>
+              <div className="text-sm font-bold text-navy">Opening {opening}…</div>
+              <div className="text-[11px] text-muted-foreground">
+                Recipients are in BCC. If nothing opens, use “Copy all emails” below.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 shadow-[0_-8px_24px_rgba(10,33,99,0.08)] backdrop-blur sm:p-4">
       <div className="mx-auto flex max-w-3xl flex-col gap-2.5">
         <div className="flex items-center justify-between gap-3">
@@ -1149,7 +1181,8 @@ function BulkEmailBar({
                 <a
                   key={i}
                   href={mailto(b)}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                  onClick={() => flashOpening("your email app")}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                 >
                   ✉ Open in my email app{batches.length > 1 ? ` (${i + 1}/${batches.length}, ${b.length})` : ` (${b.length})`}
                 </a>
@@ -1159,10 +1192,10 @@ function BulkEmailBar({
               <span>No mail app on this device?</span>
               {batches.map((b, i) => (
                 <span key={i} className="flex gap-3">
-                  <a href={gmailWeb(b)} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+                  <a href={gmailWeb(b)} target="_blank" rel="noopener noreferrer" onClick={() => flashOpening("Gmail")} className="font-semibold text-primary hover:underline">
                     Gmail web{batches.length > 1 ? ` ${i + 1}` : ""}
                   </a>
-                  <a href={outlookWeb(b)} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+                  <a href={outlookWeb(b)} target="_blank" rel="noopener noreferrer" onClick={() => flashOpening("Outlook")} className="font-semibold text-primary hover:underline">
                     Outlook web{batches.length > 1 ? ` ${i + 1}` : ""}
                   </a>
                 </span>
@@ -1175,6 +1208,7 @@ function BulkEmailBar({
         )}
       </div>
     </div>
+    </>
   );
 }
 
