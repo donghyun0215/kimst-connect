@@ -673,7 +673,18 @@ function downloadOutreachCsv(rsvps: AdminRsvp[]) {
     ]
       .filter(Boolean)
       .join(" · ");
-    return [r.email, r.organisation, r.full_name, r.job_title, "", "UNCLASSIFIED", notes, "YES"].map(esc).join(",");
+    // First-pass bucket from the RSVP interest tag so Tammy sorts less by
+    // hand: investors self-select 'Investment'; pilot/distribution intent
+    // at a startup showcase is almost always a corporate; the rest stays
+    // unclassified for her call. Everything is still upsert-by-email, so
+    // re-uploading after she reclassifies in the tool won't fight her.
+    const interest = (r.primary_interest || "").toLowerCase();
+    const type = interest.includes("invest")
+      ? "INVESTOR"
+      : interest.includes("pilot") || interest.includes("distribution") || interest.includes("partnership")
+        ? "CORPORATE"
+        : "UNCLASSIFIED";
+    return [r.email, r.organisation, r.full_name, r.job_title, "Singapore", type, notes, "YES"].map(esc).join(",");
   });
   const blob = new Blob(["\ufeff" + header + "\r\n" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
