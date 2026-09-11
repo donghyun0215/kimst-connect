@@ -658,6 +658,25 @@ function CheckInCell({ rsvp, password, onSaved }: { rsvp: AdminRsvp; password: s
 // notes, sendable. Event dumps go in as UNCLASSIFIED per the taxonomy — Tammy
 // sorts them into buckets afterwards. LinkedIn/interest/attendance travel in
 // notes so nothing collected here is lost on the way over.
+// Organisation strings are free-typed by attendees, so compare them loose:
+// lowercase, alphanumerics only. Cohort startups become STARTUP, our own
+// side becomes OTHERS — neither belongs in the outreach lead funnel.
+// Aliases cover the spellings seen in production (e.g. "WISE BIO Inc." for
+// ys-bio, "Eastseabrother" for East Sea Brother).
+function normOrg(v: string): string {
+  return (v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+const COHORT_ALIASES = [
+  "cutshion", "doublt", "doublet", "willog", "xylolabs", "xylolab",
+  "eastseabrother", "eastseabro", "haesongsnt", "haesongst", "haesong",
+  "contraueco", "contrau", "ysbio", "wisebio", "wisebioinc",
+];
+const COHORT_ORGS = new Set([
+  ...companies.flatMap((c) => [normOrg(c.name), normOrg(c.displayName), normOrg(c.slug)]),
+  ...COHORT_ALIASES,
+].filter(Boolean));
+const ORGANIZER_ORGS = ["mysc", "lodestart", "kimst", "kocham", "mysocialcompany"];
+
 function downloadOutreachCsv(rsvps: AdminRsvp[]) {
   const esc = (v: string | null | undefined) => {
     const s = v ?? "";
@@ -673,17 +692,24 @@ function downloadOutreachCsv(rsvps: AdminRsvp[]) {
     ]
       .filter(Boolean)
       .join(" · ");
-    // First-pass bucket from the RSVP interest tag so Tammy sorts less by
-    // hand: investors self-select 'Investment'; pilot/distribution intent
-    // at a startup showcase is almost always a corporate; the rest stays
-    // unclassified for her call. Everything is still upsert-by-email, so
-    // re-uploading after she reclassifies in the tool won't fight her.
+    // First-pass bucket so Tammy sorts less by hand. Order matters: the
+    // participating startups and our own side (organizers, host agency) are
+    // in the RSVP list too, and they are NOT outreach leads — tagging them
+    // by interest dropped colleagues into the investor list on the first
+    // upload. Match those by organisation first, then fall back to the
+    // self-declared interest. Everything is upsert-by-email, so re-exporting
+    // and re-uploading corrects the earlier rows in place.
+    const org = normOrg(r.organisation);
     const interest = (r.primary_interest || "").toLowerCase();
-    const type = interest.includes("invest")
-      ? "INVESTOR"
-      : interest.includes("pilot") || interest.includes("distribution") || interest.includes("partnership")
-        ? "CORPORATE"
-        : "UNCLASSIFIED";
+    const type = COHORT_ORGS.has(org)
+      ? "STARTUP"
+      : ORGANIZER_ORGS.some((o) => org.includes(o))
+        ? "OTHERS"
+        : interest.includes("invest")
+          ? "INVESTOR"
+          : interest.includes("pilot") || interest.includes("distribution") || interest.includes("partnership")
+            ? "CORPORATE"
+            : "UNCLASSIFIED";
     return [r.email, r.organisation, r.full_name, r.job_title, "Singapore", type, notes, "YES"].map(esc).join(",");
   });
   const blob = new Blob(["\ufeff" + header + "\r\n" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
